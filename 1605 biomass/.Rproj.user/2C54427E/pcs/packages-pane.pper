@@ -1,0 +1,7 @@
+{
+    "installOptions": {
+        "installFromRepository": true,
+        "libraryPath": "C:/Users/sean.di_stefano/AppData/Local/Programs/R/R-4.3.2/library",
+        "installDependencies": true
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "A520C352",
+    "path": "D:/APEX data and scripts/R scripts/1605 weight gain/Avg_DailyWeightGain_plots.R",
+    "project_path": "Avg_DailyWeightGain_plots.R",
+    "type": "r_source",
+    "hash": "1735817006",
+    "contents": "",
+    "dirty": false,
+    "created": 1713452354779.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "158,0",
+        "scrollLine": "143"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1714515849,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1714515849370,
+    "read_only": false,
+    "read_only_alternatives": []
+}
