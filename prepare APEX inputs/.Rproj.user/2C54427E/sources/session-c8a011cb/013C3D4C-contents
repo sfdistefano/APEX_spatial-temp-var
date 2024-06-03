@@ -1,0 +1,25 @@
+OPC.files_sa92Temp_AGM <- list.files(path = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_AGM",
+                                 pattern = "\\.OPC$")
+
+OPC.files_sa92Temp_TGM <- list.files(path = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_TGM",
+                                 pattern = "\\.OPC$")
+
+setwd("D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_AGM")
+OPC.input_sa92Temp_AGM <- lapply(OPC.files_sa92Temp_AGM, function(file) {
+  fread(file, skip = 2, nrows = 6,
+        sep = " ", fill = TRUE)
+})
+
+setwd("D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_TGM")
+OPC.input_sa92Temp_TGM <- lapply(OPC.files_sa92Temp_TGM, function(file) {
+  fread(file, skip = 2, nrows = 6,
+        sep = " ", fill = TRUE)
+})
+
+OPC.input_df_sa92Temp_AGM <- rbindlist(OPC.input_sa92Temp_AGM, idcol = TRUE) %>% 
+  setNames(OPC_col.names) %>%
+  select(ID, apex.code, apex.input)
+
+OPC.input_df_sa92Temp_TGM <- rbindlist(OPC.input_sa92Temp_TGM, idcol = TRUE) %>% 
+  setNames(OPC_col.names) %>%
+  select(ID, apex.code, apex.input)

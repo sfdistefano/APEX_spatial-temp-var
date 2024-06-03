@@ -1,0 +1,93 @@
+ID,Pasture,Ecosite,Treatment,Block,Proportion,Plot,CARM_name
+1,10S,Loamy,CARM,1,0.25,1,Nighthawk
+2,21N,Loamy,CARM,2,0.25,1,Highway
+3,26W,Loamy,CARM,3,0.25,1,Hilltank
+4,25NW,Loamy,CARM,4,0.25,1,Crossroads
+5,31W,Loamy,CARM,5,0.25,1,South
+6,18S,Sandy,CARM,6,0.25,1,Snowfence
+7,7SE,Loamy,CARM,7,0.167,1,Headquarters
+8,8E,Loamy,CARM,8,0.25,1,Ridgetank
+9,17S,Loamy,CARM,9,0.167,1,Saltflat
+10,20NW,Sandy,CARM,10,0.167,1,Elm
+11,10S,Loamy,CARM,1,0.25,2,Nighthawk
+12,10S,Loamy,CARM,1,0.25,3,Nighthawk
+13,10S,Loamy,CARM,1,0.25,4,Nighthawk
+14,21N,Loamy,CARM,2,0.25,2,Highway
+15,21N,Loamy,CARM,2,0.25,3,Highway
+16,21N,Loamy,CARM,2,0.25,4,Highway
+17,26W,Loamy,CARM,3,0.25,2,Hilltank
+18,26W,Loamy,CARM,3,0.25,3,Hilltank
+19,26W,Loamy,CARM,3,0.25,4,Hilltank
+20,25NW,Loamy,CARM,4,0.25,2,Crossroads
+21,25NW,Loamy,CARM,4,0.25,3,Crossroads
+22,25NW,Loamy,CARM,4,0.25,4,Crossroads
+23,31W,Loamy,CARM,5,0.25,2,South
+24,31W,Loamy,CARM,5,0.25,3,South
+25,31W,Sandy,CARM,5,0.25,4,South
+26,18S,Sandy,CARM,6,0.25,2,Snowfence
+27,18S,Sandy,CARM,6,0.25,3,Snowfence
+28,18S,Sandy,CARM,6,0.25,4,Snowfence
+29,7SE,Loamy,CARM,7,0.167,2,Headquarters
+30,7SE,Loamy,CARM,7,0.167,3,Headquarters
+31,7SE,Sandy,CARM,7,0.167,4,Headquarters
+32,7SE,Salt Flats,CARM,7,0.167,5,Headquarters
+33,7SE,Salt Flats,CARM,7,0.167,6,Headquarters
+34,8E,Sandy,CARM,8,0.25,2,Ridgetank
+35,8E,Loamy,CARM,8,0.25,3,Ridgetank
+36,8E,Sandy,CARM,8,0.25,4,Ridgetank
+37,17S,Loamy,CARM,9,0.167,2,Saltflat
+38,17S,Salt Flats,CARM,9,0.167,3,Saltflat
+39,17S,Salt Flats,CARM,9,0.167,4,Saltflat
+40,17S,Sandy,CARM,9,0.167,5,Saltflat
+41,17S,Sandy,CARM,9,0.167,6,Saltflat
+42,20NW,Sandy,CARM,10,0.167,2,Elm
+43,20NW,Sandy,CARM,10,0.167,3,Elm
+44,20NW,Sandy,CARM,10,0.167,4,Elm
+45,20NW,Salt Flats,CARM,10,0.167,5,Elm
+46,20NW,Salt Flats,CARM,10,0.167,6,Elm
+1,15E,Loamy,TRM,1,0.25,1,NA
+2,24W,Loamy,TRM,2,0.25,1,NA
+3,26E,Loamy,TRM,3,0.25,1,NA
+4,25SE,Loamy,TRM,4,0.25,1,NA
+5,31E,Loamy,TRM,5,0.25,1,NA
+6,19N,Sandy,TRM,6,0.25,1,NA
+7,7NW,Loamy,TRM,7,0.167,1,NA
+8,5E,Loamy,TRM,8,0.25,1,NA
+9,17N,Loamy,TRM,9,0.167,1,NA
+10,20SE,Sandy,TRM,10,0.167,1,NA
+11,15E,Loamy,TRM,1,0.25,2,NA
+12,15E,Loamy,TRM,1,0.25,3,NA
+13,15E,Loamy,TRM,1,0.25,4,NA
+14,24W,Loamy,TRM,2,0.25,2,NA
+15,24W,Loamy,TRM,2,0.25,3,NA
+16,24W,Loamy,TRM,2,0.25,4,NA
+17,26E,Loamy,TRM,3,0.25,2,NA
+18,26E,Loamy,TRM,3,0.25,3,NA
+19,26E,Loamy,TRM,3,0.25,4,NA
+20,25SE,Loamy,TRM,4,0.25,2,NA
+21,25SE,Loamy,TRM,4,0.25,3,NA
+22,25SE,Loamy,TRM,4,0.25,4,NA
+23,31E,Loamy,TRM,5,0.25,2,NA
+24,31E,Loamy,TRM,5,0.25,3,NA
+25,31E,Sandy,TRM,5,0.25,4,NA
+26,19N,Sandy,TRM,6,0.25,2,NA
+27,19N,Sandy,TRM,6,0.25,3,NA
+28,19N,Sandy,TRM,6,0.25,4,NA
+29,7NW,Loamy,TRM,7,0.167,2,NA
+30,7NW,Sandy,TRM,7,0.167,3,NA
+31,7NW,Loamy,TRM,7,0.167,4,NA
+32,7NW,Salt Flats,TRM,7,0.167,5,NA
+33,7NW,Salt Flats,TRM,7,0.167,6,NA
+34,5E,Sandy,TRM,8,0.25,2,NA
+35,5E,Loamy,TRM,8,0.25,3,NA
+36,5E,Sandy,TRM,8,0.25,4,NA
+37,17N,Loamy,TRM,9,0.167,2,NA
+38,17N,Salt Flats,TRM,9,0.167,3,NA
+39,17N,Salt Flats,TRM,9,0.167,4,NA
+40,17N,Sandy,TRM,9,0.167,5,NA
+41,17N,Sandy,TRM,9,0.167,6,NA
+42,20SE,Sandy,TRM,10,0.167,2,NA
+43,20SE,Sandy,TRM,10,0.167,3,NA
+44,20SE,Salt Flats,TRM,10,0.167,4,NA
+45,20SE,Salt Flats,TRM,10,0.167,5,NA
+46,20SE,Sandy,TRM,10,0.167,6,NA

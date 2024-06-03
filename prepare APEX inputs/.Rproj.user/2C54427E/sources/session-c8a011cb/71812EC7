@@ -1,0 +1,27 @@
+{
+    "id": "71812EC7",
+    "path": "D:/APEX data and scripts/R scripts/prepare APEX inputs/plant population_APEX1605.R",
+    "project_path": "plant population_APEX1605.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1716320955753.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "7,87",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1716328219,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1716328219983,
+    "read_only": false,
+    "read_only_alternatives": []
+}

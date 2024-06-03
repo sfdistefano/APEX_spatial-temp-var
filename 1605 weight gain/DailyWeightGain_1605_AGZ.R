@@ -37,7 +37,8 @@ name.agz <- c("SA", "ID", "Year", "Year_num", "CPNM",
 ##### Experimental Observed Data ###############################################
 wtg <- fread("D:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2022.csv") %>%
   mutate(gain = ADG / 2.2046) %>%
-  merge(PastureID, by = 'Pasture')
+  merge(PastureID, by = 'Pasture',
+        all.x = TRUE)
 
 
 ##### IMPORTING DATA ###########################################################
@@ -51,7 +52,8 @@ ADWG_agz_combine <- function(num.sa = 20, direct) {
     group_by(Year, Treatment) %>%
     dplyr::summarise(MeanWT = mean(gain, na.rm = T),
                      stdevWT = sd(gain, na.rm = T)) %>%
-    mutate(Type = "Measured")
+    mutate(Type = "Measured",
+           Treatment = ifelse(Treatment == "TGM", "TRM", "CARM"))
   
   # labeling CARM observations
   gain[is.na(gain)] <- "CARM"
@@ -143,7 +145,8 @@ ADWG_agz_combine(num.sa = 92, direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_9
 ## Observed TRM results
 # summarizing for each ecological site for TRM 
 Gain_ecosite_TRM_obs <- wtg %>% 
-  filter(Treatment == "TRM",
+  # mutate(Treatment = ifelse(Treatment == "TGM", "TRM", "CARM")) %>%
+  filter(Treatment == "TGM",
          Year %in% c(2014:2022)) %>%
   select(Year, Ecosite, Treatment, gain) %>%
   group_by(Year, Ecosite, Treatment) %>%
@@ -153,16 +156,22 @@ Gain_ecosite_TRM_obs <- wtg %>%
 
 ## Simulated TRM results
 # summarizing for each year
-Gain_ecosite_TRM_sim <- TGM_AGZ %>%
+pathTRM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/APEX1605_CO_TGM/CONUNN_TGM.agz"
+
+tgm_agz <- read.table(pathTRM, header = F,
+                      skip = 9, col.names = name.agz)
+
+Gain_ecosite_TRM_sim <- tgm_agz %>%
   filter(Year %in% c(2014:2022)) %>%
-  merge(PastureID, by.x = "ID", by.y = "PastureID") %>%
+  merge(PastureID, by = "ID") %>%
   select(Year, Ecosite, Treatment, WTG) %>% 
   group_by(Year, Ecosite, Treatment) %>%
   dplyr::summarise(MeanWT = mean(`WTG`,na.rm = T), 
                    stdevWT = 0, Type = "Simulated") 
 
 ## Combining results
-Gain_ecosite_TRM <- rbind(Gain_ecosite_TRM_obs, Gain_ecosite_TRM_sim)
+Gain_ecosite_TRM <- rbind(Gain_ecosite_TRM_obs, Gain_ecosite_TRM_sim) %>%
+  filter(Treatment == "TGM")
 
 ## Plotting results
 ggplot(Gain_ecosite_TRM, aes(x = "   ", y = MeanWT, fill = Type)) +
