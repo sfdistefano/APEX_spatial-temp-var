@@ -58,13 +58,6 @@ agm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/APEX1605_CO_all20/CONUNN_
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: no variability", SD = 0)
 
-# agm_agz_pop <- read.delim("APEX1605_CO_20 subareas_dyn plant pop/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
-#                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014, ID %in% c(1:10)) %>%
-#   group_by(Year) %>%
-#   summarize(MeanWT = mean(WTG)) %>%
-#   mutate(Type = "Temporal", SD = 0)
-
 agm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2022)) %>%
@@ -145,13 +138,6 @@ tgm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/APEX1605_CO_all20/CONUNN_
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: no variability", SD = 0)
 
-# tgm_agz_pop <- read.delim("APEX1605_CO_20 subareas_dyn plant pop/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
-#                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014, ID %in% c(1:10)) %>%
-#   group_by(Year) %>%
-#   summarize(MeanWT = mean(WTG)) %>%
-#   mutate(Type = "Temporal", SD = 0)
-
 tgm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2022)) %>%
@@ -168,7 +154,6 @@ tgm_agz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/APEX160
 
 TGMGain <- rbind(Gain_TGMO, 
                  tgm_agz_base, 
-                 # tgm_agz_pop, 
                  tgm_agz_var, 
                  tgm_agz_var_pop
                  )
@@ -212,7 +197,6 @@ ggplot() +
                      # sec.axis = sec_axis(~./coeff, name = "Annual Precipitation (mm)")
                      ) +
   theme_bw() +
-  # scale_color_npg() +
   ggtitle("TRM")+
   scale_x_continuous(breaks = c(2014, 2015, 2016, 2017, 
                                 2018, 2019, 2020, 2021, 2022)) +
@@ -264,14 +248,6 @@ tgm_agz_base_es <- read.delim("D:/01-APEX1605_CO_baseline/APEX1605_CO_all20/CONU
   summarize(MeanWT = mean(WTG), stdevWT = 0) %>%
   mutate(Type = "Simulated: no variability")
 
-# tgm_agz_pop_es <- read.delim("APEX1605_CO_20 subareas_dyn plant pop/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
-#                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014, ID %in% c(1:10)) %>%
-#   merge(PastureID_20sa, by = "ID", all.x = TRUE) %>%
-#   group_by(Year, Ecosite) %>%
-#   summarize(MeanWT = mean(WTG), stdevWT = 0) %>%
-#   mutate(Type = "Temporal")
-
 tgm_agz_var_es <- read.delim("APEX1605_CO_92 subareas_div/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year >= 2014) %>%
@@ -298,9 +274,8 @@ tgm_agz_var_pop_es <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/APEX
 ## Combine observed and simulated results
 TGMGain_ecosite <- rbind(Gain_ecosite, 
                          tgm_agz_base_es, 
-                         # tgm_agz_pop_es, 
-                         tgm_agz_var_es#, 
-                         # tgm_agz_var_pop_es
+                         tgm_agz_var_es, 
+                         tgm_agz_var_pop_es
                          )
 
 ## Simulation comparison statistics (model performance)

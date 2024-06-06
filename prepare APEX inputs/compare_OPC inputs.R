@@ -81,6 +81,6 @@ OPC.input_df <- rbind(OPC.input_df_sa20, OPC.input_df_sa92_AGM, OPC.input_df_sa9
   pivot_wider(names_from = source, values_from = apex.input) %>%
   mutate(diff = `20 subareas` - `92 subareas`)
 
-write.csv(OPC.input_df, "D:/APEX data and scripts/Data/OPC.input_compare.csv")
+# write.csv(OPC.input_df, "D:/APEX data and scripts/Data/OPC.input_compare.csv")
 
 
