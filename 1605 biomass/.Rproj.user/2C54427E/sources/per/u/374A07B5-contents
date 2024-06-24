@@ -1,0 +1,186 @@
+bm_cag_combine <- function(num.sa = 20, direct){
+  
+  setwd(direct)
+  
+  if(num.sa == 20){
+    
+    path <- "./Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+    
+    ## Importing simulated data
+    SimBiom <- fread(path, header = FALSE, skip = 2, 
+                     col.names = name.cag, fill = TRUE) %>%
+      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
+      mutate(Date = ymd(paste(Y, M, D, sep = "-")),
+             Treatment = ifelse(ID %in% c(1:10), "TRM", "CARM")) %>%
+      select(-c(Y:D))
+    
+    ## Importing reference information
+    PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
+      mutate(Treatment = ifelse(Treatment == "TGM", "TRM", "CARM"))
+    
+    ## Cleaning simulated data
+    SimBiom02 <- merge(SimBiom, PastureID,
+                       by = c("ID", "Treatment")) %>%
+      mutate(Type = "Simulated",
+             STL_kgha = STL * 1000,
+             STD_kgha = STD * 1000,
+             Biomass = STL_kgha + STD_kgha) %>%
+      dplyr::rename(APEXcodeFG = CPNM,
+                    MeankgPerHa = Biomass)  %>%
+      select(-c(STL:STD), -c(STL_kgha:STD_kgha))
+    
+    ## Importing observational data
+    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/AGM_Biomass_Widecln_attr_2023-07-18.csv", header = T)%>%
+      select(2:13,17) %>%
+      mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
+      dplyr::rename(Year = YearSampled) %>%
+      select(1:5,9:15) %>%
+      subset(Year %in% c(2014:2022)) %>%
+      pivot_longer(cols = c(FORB:SS, CSAG:CSPG), names_to = "APEXcodeFG", values_to = "v1") %>%
+      group_by(Year,Pasture,Plot, Transect, Treatment,APEXcodeFG) %>%
+      summarize(v1 = mean(v1)) %>%
+      group_by(Year,Pasture,Plot,Treatment,APEXcodeFG) %>%
+      summarize(v1 = mean(v1)) %>%
+      group_by(Year,Pasture,Treatment,APEXcodeFG) %>%
+      dplyr::summarize(MeankgPerHa = mean(v1)) %>%
+      subset(APEXcodeFG %in% c("WSPG", "CSPG", "SS", "FORB", "CSAG") &
+               Treatment %in% c("AGM","TGM"))%>%
+      mutate(Type = "Observed",
+             Date = ymd(paste(Year, 8, 6, sep = "-")),
+             WS = NA,
+             APEXcodeFG=as.character(APEXcodeFG)) %>%
+      ungroup(Year) %>%
+      select(-Year)
+    
+    # Changing plant codes
+    obv22$APEXcodeFG <- gsub("SS","SSHB",obv22$APEXcodeFG)
+    obv22$APEXcodeFG <- gsub("CSAG","VUOC",obv22$APEXcodeFG)
+    obv22$APEXcodeFG <- gsub("FORB","FRB3",obv22$APEXcodeFG)
+    obv22$Treatment<-gsub("TGM","TRM",obv22$Treatment)
+    obv22$Treatment<-gsub("AGM","CARM",obv22$Treatment)
+    
+    # changing one pasture name
+    obv22$Pasture <- gsub("NH", "10S", obv22$Pasture)
+    
+    ## Adding pasture information
+    obv22 <- merge(obv22, PastureID, by = c("Pasture", "Treatment"))
+    
+    ## Summarizing data into pasture
+    Biomass_pasture <- rbind(obv22, SimBiom02) %>%
+      group_by(Date, Pasture, Treatment, Type, APEXcodeFG) %>%
+      dplyr::summarise(MeankgPerHa = mean(MeankgPerHa)) %>%
+      group_by(Date,Treatment,Type,APEXcodeFG) %>%
+      dplyr::summarise(Mean = mean(MeankgPerHa))
+    
+    Biomass_pasture_se <- rbind(obv22, SimBiom02) %>%
+      group_by(Date,Treatment,Type,APEXcodeFG) %>%
+      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)),
+                       SD = sd(MeankgPerHa))
+    
+  } else if(num.sa == 92) {
+    
+    pathAGM <- "./Cage Biomass Simulation/03-APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
+    pathTRM <- "./Cage Biomass Simulation/03-APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
+    
+    # Importing simulated data
+    SimBiom_AGM <- fread(pathAGM, header = FALSE, skip = 2,
+                         col.names = name.cag, fill = TRUE) %>%
+      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
+      mutate(Date = ymd(paste(Y, M, D, sep = "-")),
+             Treatment = "CARM") %>%
+      select(-c(Y:D))
+    
+    SimBiom_TRM <- fread(pathTRM, header = FALSE, skip = 2,
+                         col.names = name.cag, fill = TRUE) %>%
+      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
+      mutate(Date = ymd(paste(Y, M, D, sep = "-")),
+             Treatment = "TRM") %>%
+      select(-c(Y:D))
+    
+    ## Importing reference information
+    PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
+    
+    ## Cleaning reference information
+    SimBiom02_AGM <- merge(SimBiom_AGM, PastureID,
+                           by = c("ID", "Treatment")) %>%
+      mutate(Type = "Simulated",
+             STL_kgha = STL * 1000,
+             STD_kgha = STD * 1000,
+             Biomass = STL_kgha + STD_kgha) %>%
+      dplyr::rename(APEXcodeFG = CPNM,
+                    MeankgPerHa = Biomass) %>%
+      select(-c(STL:STD), -c(STL_kgha:STD_kgha))
+    
+    SimBiom02_TRM <- merge(SimBiom_TRM, PastureID,
+                           by = c("ID", "Treatment")) %>%
+      mutate(Type = "Simulated",
+             STL_kgha = STL * 1000,
+             STD_kgha = STD * 1000,
+             Biomass = STL_kgha + STD_kgha) %>%
+      dplyr::rename(APEXcodeFG = CPNM,
+                    MeankgPerHa = Biomass) %>%
+      select(-c(STL:STD), -c(STL_kgha:STD_kgha))
+    
+    ## Importing observational data
+    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/AGM_Biomass_Widecln_attr_2023-07-18.csv", header = T)%>%
+      select(2:13,17) %>%
+      mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
+      dplyr::rename(Year = YearSampled) %>%
+      select(1:5,9:15) %>%
+      subset(Year %in% c(2014:2022)) %>%
+      pivot_longer(cols = c(FORB:SS, CSAG:CSPG), names_to = "APEXcodeFG", values_to = "v1") %>%
+      group_by(Year,Pasture,Plot, Transect, Treatment,APEXcodeFG) %>%
+      summarize(v1 = mean(v1)) %>%
+      group_by(Year,Treatment, Pasture,Plot,APEXcodeFG) %>%
+      dplyr::summarize(MeankgPerHa = mean(v1)) %>%
+      subset(APEXcodeFG %in% c("WSPG", "CSPG", "SS", "FORB", "CSAG") &
+               Treatment %in% c("AGM","TGM"))%>%
+      mutate(Type = "Observed",
+             Date = ymd(paste(Year, 8, 6, sep = "-")),
+             WS = NA,
+             APEXcodeFG=as.character(APEXcodeFG)) %>%
+      ungroup(Year) %>%
+      select(-Year)
+    
+    # Changing plant codes
+    obv22$APEXcodeFG <- gsub("SS","SSHB",obv22$APEXcodeFG)
+    obv22$APEXcodeFG <- gsub("CSAG","VUOC",obv22$APEXcodeFG)
+    obv22$APEXcodeFG <- gsub("FORB","FRB3",obv22$APEXcodeFG)
+    obv22$Treatment<-gsub("TGM","TRM",obv22$Treatment)
+    obv22$Treatment<-gsub("AGM","CARM",obv22$Treatment)
+    
+    # changing one pasture name
+    obv22$Pasture <- gsub("NH", "10S", obv22$Pasture)
+    
+    ## Adding pasture information
+    obv22 <- merge(obv22, PastureID, by = c("Pasture","Plot","Treatment"))
+    
+    ## Summarizing data into pasture
+    Biomass_pasture <- rbind(obv22, SimBiom02_AGM, SimBiom02_TRM) %>%
+      group_by(Date, Pasture, Treatment, Type, APEXcodeFG) %>%
+      dplyr::summarise(MeankgPerHa = mean(MeankgPerHa)) %>%
+      group_by(Date,Treatment,Type,APEXcodeFG) %>%
+      dplyr::summarise(Mean = mean(MeankgPerHa))
+    
+    Biomass_pasture_se <- rbind(obv22, SimBiom02_AGM, SimBiom02_TRM) %>%
+      group_by(Date,Treatment,Type,APEXcodeFG) %>%
+      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)),
+                       SD = sd(MeankgPerHa))
+    
+  } else{
+    print("incompatible number of subareas")
+  }
+  
+  Biomass_pasture <- merge(Biomass_pasture, Biomass_pasture_se)
+  
+  Biomass_pasture$APEXcodeFG <- gsub("FRB3","FORB",Biomass_pasture$APEXcodeFG)
+  Biomass_pasture$APEXcodeFG <- gsub("VUOC","CSAG",Biomass_pasture$APEXcodeFG)
+  
+  Biomass_pasture <- Biomass_pasture %>% 
+    filter(APEXcodeFG %in% c("CSPG", "FORB", "CSAG", "WSPG"))
+  
+  return(Biomass_pasture)
+}

@@ -1,6 +1,7 @@
 library(tidyverse)
 library(reshape2)
 library(data.table)
+library(ggsci)
 
 # Import pasture reference information
 PastureID_sa20 <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
@@ -95,37 +96,23 @@ PlantPop_yr_spatTemp$CPNM <- gsub(PlantPop_yr_spatTemp$CPNM, pattern = "FRB3", r
 PlantPop_yr_spatTemp$CPNM <- gsub(PlantPop_yr_spatTemp$CPNM, pattern = "VUOC", replacement = "CSAG")
 
 ## Visualize plant pop differences
-ggplot(PlantPop_yr_base, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
-  geom_bar(position="stack", stat="identity") +
-  # ggtitle("Baseline Simulation Plant Pop - Herbaceous") +
-  ylab("Herbaceous Plant Pop (Basal Area %)") +
-  xlab("Year") +
-  ylim(0, 30) +
-  theme_bw() +
-  theme(text = element_text(size = 15, family = 'serif')) +
-  scale_fill_brewer(palette = "Set2", type = "qual",
-                    name = "Functional Group")
+PlantPop_yr_base$sim.type <- "Baseline"
 
-ggplot(PlantPop_yr_spat, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
-  geom_bar(position="stack", stat="identity") +
-  # ggtitle("Spatial Simulation Plant Pop - Herbaceous") +
-  ylab("Herbaceous Plant Pop (Basal Area %)") +
-  xlab("Year") +
-  ylim(0, 30) +
-  theme_bw() +
-  theme(text = element_text(size = 15, family = 'serif')) +
-  scale_fill_brewer(palette = "Set2", type = "qual",
-                    name = "Functional Group")
+PlantPop_yr_spat$sim.type <- "Spatial"
 
-ggplot(PlantPop_yr_spatTemp, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
+PlantPop_yr_spatTemp$sim.type <- "Spatial+Temporal"
+
+
+PlantPop <- rbind(PlantPop_yr_base, PlantPop_yr_spat, PlantPop_yr_spatTemp)
+
+
+ggplot(PlantPop, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
   geom_bar(position="stack", stat="identity") +
   # ggtitle("Spatial + Temporal Simulation Plant Pop - Herbaceous") +
-  ylab("Herbaceous Plant Pop (Basal Area %)") +
+  ylab("Herbaceous Plant Population (Basal Area %)") +
   xlab("Year") +
   ylim(0, 30) +
   theme_bw() +
   theme(text = element_text(size = 15, family = 'serif')) +
-  scale_fill_brewer(palette = "Set2", type = "qual",
-                    name = "Functional Group")
-
-  
+  scale_fill_npg(name = "Functional Group") +
+  facet_wrap(~sim.type)

@@ -90,7 +90,8 @@ bm_cag_combine <- function(num.sa = 20, direct){
     
     Biomass_pasture_se <- rbind(obv22, SimBiom02) %>%
       group_by(Date,Treatment,Type,APEXcodeFG) %>%
-      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)))
+      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)),
+                       SD = sd(MeankgPerHa))
     
   } else if(num.sa == 92) {
     
@@ -181,7 +182,8 @@ bm_cag_combine <- function(num.sa = 20, direct){
     
     Biomass_pasture_se <- rbind(obv22, SimBiom02_AGM, SimBiom02_TRM) %>%
       group_by(Date,Treatment,Type,APEXcodeFG) %>%
-      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)))
+      dplyr::summarise(SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)),
+                       SD = sd(MeankgPerHa))
     
   } else{
     print("incompatible number of subareas")
@@ -192,7 +194,8 @@ bm_cag_combine <- function(num.sa = 20, direct){
   Biomass_pasture$APEXcodeFG <- gsub("FRB3","FORB",Biomass_pasture$APEXcodeFG)
   Biomass_pasture$APEXcodeFG <- gsub("VUOC","CSAG",Biomass_pasture$APEXcodeFG)
   
-  Biomass_pasture <- Biomass_pasture %>% filter(APEXcodeFG %in% c("CSPG", "FORB", "CSAG", "WSPG"))
+  Biomass_pasture <- Biomass_pasture %>% 
+    filter(APEXcodeFG %in% c("CSPG", "FORB", "CSAG", "WSPG"))
   
   return(Biomass_pasture)
 }
@@ -220,7 +223,7 @@ Biomass_comb_graze <- rbind(Biomass_base_graze,
 
 ## Simulation stats
 graze_compare <- Biomass_comb_graze %>% 
-  select(-SE) %>%
+  select(-SE, -SD) %>%
   filter(month(Date) == 8, day(Date) == 6) %>%
   pivot_wider(names_from = Type, values_from = Mean) 
 
@@ -231,7 +234,7 @@ graze_simStats <- graze_compare %>%
             d = round(d(Simulated, Observed), 2),
             pbias = pbias(Simulated, Observed, dec = 2))
 
-# write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/graze trt_simStats_05132024.csv")
+write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/graze trt_simStats_06242024_NEW.csv")
 
 ## color blind friendly palette
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
@@ -239,16 +242,19 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
 
 ## Plot across grazing treatment*plant functional group
 ggplot()+
+  geom_ribbon(aes(x = Date, ymin = Mean - (SE*2), ymax = Mean + (SE*2)),
+              subset(Biomass_base_graze, Type %in% "Simulated"),
+              alpha = 0.15) +
   geom_line(aes(x = Date, y = Mean, color = Sim.Type),
             subset(Biomass_comb_graze, Type %in% "Simulated"),
             linewidth = 1) +
-  geom_point(aes(x = Date, y = Mean, color = "Observed"), 
-             subset(Biomass_base_graze, Type == "Observed"), 
+  geom_point(aes(x = Date, y = Mean, color = "Observed"),
+             subset(Biomass_base_graze, Type == "Observed"),
              size = 1.75, stroke = 0.7) +
   geom_errorbar(aes(x = Date, ymin = Mean - (SE*2), ymax = Mean + (SE*2),
                     color = "Observed"),
                 subset(Biomass_base_graze, Type %in% "Observed"),
-                linewidth = 0.7, width = 100)+
+                linewidth = 0.7, width = 100) +
   facet_grid(APEXcodeFG ~ Treatment, scales = "free_y") +
   ylab(expression(paste("Ungrazed Standing Biomass (kg ", " ha" ^-1,")"))) +
   xlab("Date (Month-Year)")+

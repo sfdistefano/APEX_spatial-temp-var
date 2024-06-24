@@ -119,4 +119,4 @@ opc.input_shrub_sa20 <- merge(shrub.summ_plot, PastureID_sa20,
 # combine both data types
 plant.pop_sa20 <- rbind(opc.input_basal_sa20,opc.input_shrub_sa20)
 
-write.csv(plant.pop_sa20, "D:/APEX data and scripts/APEX inputs/input_OPC_subareas20.csv")
+# write.csv(plant.pop_sa20, "D:/APEX data and scripts/APEX inputs/input_OPC_subareas20.csv")
