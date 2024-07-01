@@ -18,12 +18,12 @@ name.dgz <- c("ISA", "ID", "HERD","IDOM", "Y", "M", "D", "WSAha", "GNAM", "HRDSZ
 
 ## Importing file and setting column names
 # Traditionally grazed pastures
-tgm_dgz <- read.delim("./APEX1605_CO_TGM/CONUNN_TGM.DGZ", skip = 10, 
+tgm_dgz <- read.delim("./Wt Gain Simulation/03-APEX1605_CO_TGM/CONUNN_TGM.DGZ", skip = 10, 
                       header = FALSE, sep = "", col.names = name.dgz) %>%
   mutate(Date = ymd(paste(Y,M,D, sep = "-"))) # adding date column
 
 # Rotationally (adaptively) grazed pastures 
-agm_dgz <- read.delim("./APEX1605_CO_AGM/CONUNN_TGM.DGZ", skip = 10, 
+agm_dgz <- read.delim("./Wt Gain Simulation/03-APEX1605_CO_AGM/CONUNN_TGM.DGZ", skip = 10, 
                       header = FALSE, sep = "", col.names = name.dgz) %>%
   mutate(Date = ymd(paste(Y,M,D, sep = "-")))
 
@@ -39,13 +39,13 @@ cper_ppt <- read.csv("D:/APEX data and scripts/Data/CPER PPT/CPER daily climate 
 # Filter and prepare data for years and pastures of interest
 tgm_dgz_filtered <- tgm_dgz %>%
   filter(#ISA %in% c(2:4) & 
-    M %in% c(5:9) & Y %in% c(2014:2022)) %>%
+    M %in% c(5:9) & Y %in% c(2014:2023)) %>%
   group_by(Date,Y,HERD) %>%
   summarize(DWG = mean(DWT), GZWT = mean(GZWTkg)) 
 
 agm_dgz_filtered <- agm_dgz %>%
   filter(#ISA %in% c(3:6) &
-    M %in% c(5:9) & Y %in% c(2014:2022)) %>%
+    M %in% c(5:9) & Y %in% c(2014:2023)) %>%
   group_by(Date,Y, HERD, ISA) %>%
   summarize(DWG = mean(DWT), GZWT = mean(GZWTkg)) %>%
   mutate(herd.isa.month = paste(HERD, ISA, month(Date), sep = "-"))
@@ -63,7 +63,7 @@ coeff <- max.apex/max.ppt
 # Scaling precipitation data
 ppt <- cper_ppt %>% 
   mutate(ppt_scale = RainTotal_mm*coeff) %>% 
-  filter(month(date) %in% c(6:9) & year(date) %in% c(2014:2022)) %>%
+  filter(month(date) %in% c(6:9) & year(date) %in% c(2014:2023)) %>%
   rename(Y = year)
 
 ## Visualization of each grazing treatment

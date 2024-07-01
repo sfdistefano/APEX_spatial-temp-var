@@ -19,12 +19,12 @@ bm_cag_combine <- function(num.sa = 20, direct){
   
   if(num.sa == 20){
     
-    path <- "./APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+    path <- "./Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
     
     ## Importing simulated data
     SimBiom <- fread(path, header = FALSE, skip = 2, 
                      col.names = name.cag, fill = TRUE) %>%
-      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      filter(Y %in% c(2014:2023) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
       select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
       mutate(Date = ymd(paste(Y, M, D, sep = "-")),
              Treatment = ifelse(ID %in% c(1:10), "TRM", "CARM")) %>%
@@ -46,12 +46,12 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(STL:STD), -c(STL_kgha:STD_kgha))
     
     ## Importing observational data
-    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/AGM_Biomass_Widecln_attr_2023-07-18.csv", header = T)%>%
+    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
       select(2:13,17) %>%
       mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
       dplyr::rename(Year = YearSampled) %>%
       select(1:5,9:15) %>%
-      subset(Year %in% c(2014:2022)) %>%
+      subset(Year %in% c(2014:2023)) %>%
       pivot_longer(cols = c(FORB:SS, CSAG:CSPG), names_to = "APEXcodeFG", values_to = "v1") %>%
       group_by(Year,Pasture,Plot, Transect, Treatment,APEXcodeFG) %>%
       summarize(v1 = mean(v1)) %>%
@@ -95,13 +95,13 @@ bm_cag_combine <- function(num.sa = 20, direct){
     
   } else if(num.sa == 92) {
     
-    pathAGM <- "./APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
-    pathTRM <- "./APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
+    pathAGM <- "./Cage Biomass Simulation/03-APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
+    pathTRM <- "./Cage Biomass Simulation/03-APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
     
     # Importing simulated data
     SimBiom_AGM <- fread(pathAGM, header = FALSE, skip = 2,
                          col.names = name.cag, fill = TRUE) %>%
-      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      filter(Y %in% c(2014:2023) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
       select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
       mutate(Date = ymd(paste(Y, M, D, sep = "-")),
              Treatment = "CARM") %>%
@@ -109,7 +109,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
     
     SimBiom_TRM <- fread(pathTRM, header = FALSE, skip = 2,
                          col.names = name.cag, fill = TRUE) %>%
-      filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
+      filter(Y %in% c(2014:2023) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
       select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
       mutate(Date = ymd(paste(Y, M, D, sep = "-")),
              Treatment = "TRM") %>%
@@ -140,12 +140,12 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(STL:STD), -c(STL_kgha:STD_kgha))
     
     ## Importing observational data
-    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/AGM_Biomass_Widecln_attr_2023-07-18.csv", header = T)%>%
+    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
       select(2:13,17) %>%
       mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
       dplyr::rename(Year = YearSampled) %>%
       select(1:5,9:15) %>%
-      subset(Year %in% c(2014:2022)) %>%
+      subset(Year %in% c(2014:2023)) %>%
       pivot_longer(cols = c(FORB:SS, CSAG:CSPG), names_to = "APEXcodeFG", values_to = "v1") %>%
       group_by(Year,Pasture,Plot, Transect, Treatment,APEXcodeFG) %>%
       summarize(v1 = mean(v1)) %>%
@@ -217,15 +217,14 @@ Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
 
 ### COMPARE ACROSS SCENARIOS @ GRAZING TREATMENT LEVEL 
 Biomass_comb_graze <- rbind(Biomass_base_graze, 
-                            Biomass_var_graze, 
-                            # Biomass_pop_graze, 
+                            Biomass_var_graze,  
                             Biomass_var_pop_graze)
 
 ## Simulation stats
 graze_compare <- Biomass_comb_graze %>% 
   select(-SE, -SD) %>%
   filter(month(Date) == 8, day(Date) == 6) %>%
-  pivot_wider(names_from = Type, values_from = Mean) 
+  pivot_wider(names_from = Type, values_from = Mean)
 
 graze_simStats <- graze_compare %>%
   group_by(Treatment, Sim.Type, APEXcodeFG) %>%
@@ -234,15 +233,14 @@ graze_simStats <- graze_compare %>%
             d = round(d(Simulated, Observed), 2),
             pbias = pbias(Simulated, Observed, dec = 2))
 
-write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/graze trt_simStats_06242024_NEW.csv")
+# write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/graze trt_simStats_Step01.csv")
 
 ## color blind friendly palette
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
-                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73")
 
 ## Plot across grazing treatment*plant functional group
 ggplot()+
-  geom_ribbon(aes(x = Date, ymin = Mean - (SE*2), ymax = Mean + (SE*2)),
+  geom_ribbon(aes(x = Date, ymin = Mean - SD, ymax = Mean + SD),
               subset(Biomass_base_graze, Type %in% "Simulated"),
               alpha = 0.15) +
   geom_line(aes(x = Date, y = Mean, color = Sim.Type),
@@ -251,7 +249,7 @@ ggplot()+
   geom_point(aes(x = Date, y = Mean, color = "Observed"),
              subset(Biomass_base_graze, Type == "Observed"),
              size = 1.75, stroke = 0.7) +
-  geom_errorbar(aes(x = Date, ymin = Mean - (SE*2), ymax = Mean + (SE*2),
+  geom_errorbar(aes(x = Date, ymin = Mean - SD, ymax = Mean + SD,
                     color = "Observed"),
                 subset(Biomass_base_graze, Type %in% "Observed"),
                 linewidth = 0.7, width = 100) +
@@ -265,152 +263,3 @@ ggplot()+
   theme(text = element_text(size = 15, family = 'serif'),
         axis.text.x = element_text(angle = 90),
         panel.spacing = unit(0.75, "lines"))
-
-###### ECOLOGICAL SITE #########################################################
-bm_cag_combine_plot <- function(direct) {
-
-  ## Pasture reference information
-  PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
-
-  ## Importing observational data
-  obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/AGM_Biomass_Widecln_attr_2023-07-18.csv", header = T)%>%
-    select(2:13,17) %>%
-    mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
-    dplyr::rename(Year = YearSampled) %>%
-    select(1:5,9:15) %>%
-    subset(Year %in% c(2014:2022)) %>%
-    pivot_longer(cols = c(FORB:SS, CSAG:CSPG), names_to = "APEXcodeFG", values_to = "v1") %>%
-    group_by(Year,Pasture,Plot,Transect,Treatment,APEXcodeFG) %>%
-    summarize(v1 = mean(v1)) %>%
-    group_by(Year,Treatment,Pasture,Plot,APEXcodeFG) %>%
-    dplyr::summarize(MeankgPerHa = mean(v1), Std = sd(v1)) %>%
-    subset(APEXcodeFG %in% c("WSPG", "CSPG", "SS", "FORB", "CSAG") &
-             Treatment %in% c("AGM","TGM"))%>%
-    mutate(Type = "Observed",
-           Date = ymd(paste(Year, 8, 6, sep = "-")),
-           WS = NA,
-           APEXcodeFG=as.character(APEXcodeFG)) %>%
-    ungroup(Year) %>%
-    select(-Year)
-
-  # Changing plant codes
-  obv22$APEXcodeFG <- gsub(replacement = "SSHB", pattern = "SS", obv22$APEXcodeFG)
-  obv22$APEXcodeFG <- gsub(replacement = "CSAG", pattern = "VUOC",obv22$APEXcodeFG)
-  obv22$APEXcodeFG <- gsub(replacement = "FORB", pattern = "FRB3",obv22$APEXcodeFG)
-  obv22$Treatment<-gsub(replacement = "TRM", pattern = "TGM",obv22$Treatment)
-  obv22$Treatment<-gsub(replacement = "CARM", pattern = "AGM",obv22$Treatment)
-
-  # changing one pasture name
-  obv22$Pasture <- gsub(replacement = "10S", pattern = "NH", obv22$Pasture)
-
-  ## Adding pasture information
-  obv22 <- merge(obv22, PastureID, by = c("Pasture","Plot","Treatment")) %>%
-    group_by(Date,Type,Ecosite,APEXcodeFG) %>%
-    dplyr::summarise(Mean = mean(MeankgPerHa),
-                     SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa)))
-
-  setwd(direct)
-
-  pathAGM <- "./APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
-  pathTRM <- "./APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
-
-  # Importing simulated data
-  SimBiom_AGM <- fread(pathAGM, header = FALSE, skip = 2,
-                       col.names = name.cag, fill = TRUE) %>%
-    filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
-    select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
-    mutate(Date = ymd(paste(Y, M, D, sep = "-")),
-           Treatment = "CARM") %>%
-    select(-c(Y:D))
-
-  SimBiom_TRM <- fread(pathTRM, header = FALSE, skip = 2,
-                       col.names = name.cag, fill = TRUE) %>%
-    filter(Y %in% c(2014:2022) & CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3", "SSHB")) %>%
-    select(ID, Y, M, D, CPNM, STL, STD, WS) %>%
-    mutate(Date = ymd(paste(Y, M, D, sep = "-")),
-           Treatment = "TRM") %>%
-    select(-c(Y:D))
-
-  ## Cleaning reference information
-  SimBiom02_AGM <- merge(SimBiom_AGM, PastureID,
-                         by = c("ID", "Treatment")) %>%
-    mutate(Type = "Simulated",
-           Std = 0,
-           STL_kgha = STL * 1000,
-           STD_kgha = STD * 1000,
-           Biomass = STL_kgha + STD_kgha) %>%
-    dplyr::rename(APEXcodeFG = CPNM,
-                  MeankgPerHa = Biomass) %>%
-    select(-c(STL:STD), -c(STL_kgha:STD_kgha))
-
-  SimBiom02_TRM <- merge(SimBiom_TRM, PastureID,
-                         by = c("ID", "Treatment")) %>%
-    mutate(Type = "Simulated",
-           Std = 0,
-           STL_kgha = STL * 1000,
-           STD_kgha = STD * 1000,
-           Biomass = STL_kgha + STD_kgha) %>%
-    dplyr::rename(APEXcodeFG = CPNM,
-                  MeankgPerHa = Biomass) %>%
-    select(-c(STL:STD), -c(STL_kgha:STD_kgha))
-
-  Biomass_ecosite <- rbind(SimBiom02_AGM, SimBiom02_TRM) %>%
-    group_by(Date,Ecosite,Type, APEXcodeFG) %>%
-    dplyr::summarise(Mean = mean(MeankgPerHa),
-                     SE = sd(MeankgPerHa)/sqrt(length(MeankgPerHa))) %>%
-    rbind(obv22)
-
-
-  Biomass_ecosite$APEXcodeFG <- gsub("FRB3","FORB",Biomass_ecosite$APEXcodeFG)
-  Biomass_ecosite$APEXcodeFG <- gsub("VUOC","CSAG",Biomass_ecosite$APEXcodeFG)
-
-  # Biomass_ecosite <- Biomass_ecosite %>% filter(APEXcodeFG %in% c("CSPG", "WSPG"))
-
-  return(Biomass_ecosite)
-}
-
-Biomass_var_ecosite <- bm_cag_combine_plot(direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div") %>%
-  mutate(Sim.Type = "Simulated: spatial variability")
-
-Biomass_var_pop_ecosite <- bm_cag_combine_plot(direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
-  mutate(Sim.Type = "Simulated: spatial+temporal variability")
-
-Biomass_comb_ecosite <- rbind(Biomass_var_ecosite, Biomass_var_pop_ecosite) %>%
-  filter(!(APEXcodeFG %in% c("CSAG","SSHB", "FORB")))
-
-## Simulation stats
-ecosite_compare <- Biomass_comb_ecosite %>%
-  select(-SE) %>%
-  filter(month(Date) == 8, day(Date) == 6) %>%
-  pivot_wider(names_from = Type, values_from = Mean)
-
-ecosite_simStats <- ecosite_compare %>%
-  group_by(Ecosite, Sim.Type, APEXcodeFG) %>%
-  summarise(rmse = round(rmse(Simulated, Observed), 2),
-            nrmse = round(nrmse(Simulated, Observed, norm = "maxmin")/100, 2),
-            d = round(d(Simulated, Observed), 2),
-            pbias = pbias(Simulated, Observed, dec = 2))
-
-# write.csv(ecosite_simStats, "D:/APEX data and scripts/APEX outputs/ecosite_simStats_05132024.csv")
-
-# ggplot() +
-#   geom_line(aes(x = Date, y = Mean, color = Sim.Type),
-#             subset(Biomass_comb_ecosite, Type %in% "Simulated"),
-#             linewidth = 1) +
-#   geom_point(aes(x = Date, y = Mean, color = "Observed"),
-#              subset(Biomass_comb_ecosite, Type == "Observed"),
-#              size = 1.75, stroke = 0.7) +
-#   geom_errorbar(aes(x = Date, ymin = Mean - (SE*2), ymax = Mean + (SE*2),
-#                     color = "Observed"),
-#                 subset(Biomass_comb_ecosite, Type %in% "Observed"),
-#                 linewidth = 0.7, width = 100) +
-#   facet_grid(APEXcodeFG ~ Ecosite, scales = "free_y")+
-#   ylab(expression(paste("Ungrazed Standing Biomass (kg ", " ha" ^-1,")"))) +
-#   xlab("Date (Month-Year)")+
-#   scale_x_date(date_breaks = "1 year", date_labels = "%m-%y",expand = c(0,10))+
-#   scale_color_manual(values = c("black","#56B4E9","#009E73"),
-#                      name = "Forage Production Data") +
-#   theme_bw() +
-#   theme(text = element_text(size = 15, family = 'serif'),
-#         axis.text.x = element_text(angle = 90),
-#         panel.spacing = unit(0.75, "lines"))

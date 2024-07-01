@@ -3,7 +3,7 @@
     "path": "~/GitHub/APEX_spatial-temp-var/1605 weight gain/Avg_DailyWeightGain_plots.R",
     "project_path": "Avg_DailyWeightGain_plots.R",
     "type": "r_source",
-    "hash": "1959902734",
+    "hash": "1073323871",
     "contents": "",
     "dirty": false,
     "created": 1715964850650.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "55,32",
-        "scrollLine": "42"
+        "cursorPosition": "140,77",
+        "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1717688110,
+    "lastKnownWriteTime": 1719350108,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1717688110141,
+    "last_content_update": 1719350108165,
     "read_only": false,
     "read_only_alternatives": []
 }

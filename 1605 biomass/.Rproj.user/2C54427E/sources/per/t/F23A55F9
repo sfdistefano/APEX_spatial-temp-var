@@ -1,0 +1,27 @@
+{
+    "id": "F23A55F9",
+    "path": "~/GitHub/APEX_spatial-temp-var/1605 biomass/CageBiomass_patchwork fig.R",
+    "project_path": "CageBiomass_patchwork fig.R",
+    "type": "r_source",
+    "hash": "3505813606",
+    "contents": "",
+    "dirty": false,
+    "created": 1719592587486.0,
+    "source_on_save": false,
+    "relative_order": 11,
+    "properties": {
+        "tempName": "Untitled3",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "10,40",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1719846714,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1719846714332,
+    "read_only": false,
+    "read_only_alternatives": []
+}

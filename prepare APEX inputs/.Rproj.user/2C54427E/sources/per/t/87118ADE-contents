@@ -2,6 +2,7 @@ library(tidyverse)
 library(reshape2)
 library(data.table)
 library(ggsci)
+library(patchwork)
 
 # Import pasture reference information
 PastureID_sa20 <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
@@ -16,22 +17,22 @@ name.cag <- c("N", "ID", "Y", "M", "D", "CPNM", "WSAha","Grazed.1", "Grazed.2",
 
 ## Import population data
 # Step 1: Baseline simulation
-path <- "D:/01-APEX1605_CO_baseline/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
 
 PlantPop_base <- fread(path, header = FALSE, skip = 2, 
                      col.names = name.cag, fill = TRUE) %>%
-  filter(Y %in% c(2014:2022) & 
+  filter(Y %in% c(2014:2023) & 
          CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3")) %>%
   select(ID, Y, CPNM, POP) %>%
   distinct()
 
 # Step 2: Spatial Variability simulation
-pathAGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
-pathTGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag" 
+pathAGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Cage Biomass Simulation/03-APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
+pathTGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Cage Biomass Simulation/03-APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag" 
 
 PlantPop_spat_AGM <- fread(pathAGM, header = FALSE, skip = 2, 
                        col.names = name.cag, fill = TRUE) %>%
-  filter(Y %in% c(2014:2022) & 
+  filter(Y %in% c(2014:2023) & 
            CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3")) %>%
   select(ID, Y, CPNM, POP) %>%
   distinct() %>%
@@ -39,7 +40,7 @@ PlantPop_spat_AGM <- fread(pathAGM, header = FALSE, skip = 2,
 
 PlantPop_spat_TGM <- fread(pathTGM, header = FALSE, skip = 2, 
                            col.names = name.cag, fill = TRUE) %>%
-  filter(Y %in% c(2014:2022) & 
+  filter(Y %in% c(2014:2023) & 
            CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3")) %>%
   select(ID, Y, CPNM, POP) %>%
   distinct()  %>%
@@ -48,12 +49,12 @@ PlantPop_spat_TGM <- fread(pathTGM, header = FALSE, skip = 2,
 PlantPop_spat <- rbind(PlantPop_spat_AGM, PlantPop_spat_TGM)
 
 # Step 3: Spatial + Temporal Variability simulation
-pathAGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
-pathTGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag" 
+pathAGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Cage Biomass Simulation/03-APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
+pathTGM <- "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Cage Biomass Simulation/03-APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag" 
 
 PlantPop_spatTemp_AGM <- fread(pathAGM, header = FALSE, skip = 2, 
                            col.names = name.cag, fill = TRUE) %>%
-  filter(Y %in% c(2014:2022) & 
+  filter(Y %in% c(2014:2023) & 
            CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3")) %>%
   select(ID, Y, CPNM, POP) %>%
   distinct() %>%
@@ -61,7 +62,7 @@ PlantPop_spatTemp_AGM <- fread(pathAGM, header = FALSE, skip = 2,
 
 PlantPop_spatTemp_TGM <- fread(pathTGM, header = FALSE, skip = 2, 
                            col.names = name.cag, fill = TRUE) %>%
-  filter(Y %in% c(2014:2022) & 
+  filter(Y %in% c(2014:2023) & 
            CPNM %in% c("WSPG", "CSPG", "VUOC", "FRB3")) %>%
   select(ID, Y, CPNM, POP) %>%
   distinct()  %>%
@@ -71,48 +72,64 @@ PlantPop_spatTemp <- rbind(PlantPop_spatTemp_AGM, PlantPop_spatTemp_TGM)
 
 # Add in reference info
 PlantPop_yr_base <- merge(PlantPop_base, PastureID_sa20, by = "ID") %>%
-  group_by(Y, CPNM) %>%
+  group_by(Y, Ecosite, CPNM) %>%
   summarize(plantPop = mean(POP))
 
 PlantPop_yr_base$CPNM <- gsub(PlantPop_yr_base$CPNM, pattern = "FRB3", replacement = "FORB")
 PlantPop_yr_base$CPNM <- gsub(PlantPop_yr_base$CPNM, pattern = "VUOC", replacement = "CSAG")
   
 PlantPop_yr_spat <- merge(PlantPop_spat, PastureID_sa92, by = c("ID", "Treatment")) %>%
-  group_by(Y, CPNM, Pasture) %>%
+  group_by(Y, Ecosite, CPNM, Pasture) %>%
   summarize(POP = mean(POP)) %>%
-  group_by(Y, CPNM) %>%
+  group_by(Y, Ecosite, CPNM) %>%
   summarize(plantPop = mean(POP))
 
 PlantPop_yr_spat$CPNM <- gsub(PlantPop_yr_spat$CPNM, pattern = "FRB3", replacement = "FORB")
 PlantPop_yr_spat$CPNM <- gsub(PlantPop_yr_spat$CPNM, pattern = "VUOC", replacement = "CSAG")
 
 PlantPop_yr_spatTemp <- merge(PlantPop_spatTemp, PastureID_sa92, by = c("ID", "Treatment")) %>%
-  group_by(Y, CPNM, Pasture) %>%
+  group_by(Y, Ecosite, CPNM, Pasture) %>%
   summarize(POP = mean(POP)) %>%
-  group_by(Y, CPNM) %>%
+  group_by(Y, Ecosite, CPNM) %>%
   summarize(plantPop = mean(POP))
 
 PlantPop_yr_spatTemp$CPNM <- gsub(PlantPop_yr_spatTemp$CPNM, pattern = "FRB3", replacement = "FORB")
 PlantPop_yr_spatTemp$CPNM <- gsub(PlantPop_yr_spatTemp$CPNM, pattern = "VUOC", replacement = "CSAG")
 
 ## Visualize plant pop differences
-PlantPop_yr_base$sim.type <- "Baseline"
+PlantPop_yr_base$sim.type <- "No Variability"
 
-PlantPop_yr_spat$sim.type <- "Spatial"
+PlantPop_yr_spat$sim.type <- "Spatial Variability"
 
-PlantPop_yr_spatTemp$sim.type <- "Spatial+Temporal"
-
-
-PlantPop <- rbind(PlantPop_yr_base, PlantPop_yr_spat, PlantPop_yr_spatTemp)
+PlantPop_yr_spatTemp$sim.type <- "Spatial+Temporal Variability"
 
 
-ggplot(PlantPop, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
+PlantPop <- rbind(#PlantPop_yr_base, 
+                  PlantPop_yr_spat, PlantPop_yr_spatTemp)
+
+
+var <- ggplot(PlantPop, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
   geom_bar(position="stack", stat="identity") +
-  # ggtitle("Spatial + Temporal Simulation Plant Pop - Herbaceous") +
   ylab("Herbaceous Plant Population (Basal Area %)") +
   xlab("Year") +
   ylim(0, 30) +
   theme_bw() +
   theme(text = element_text(size = 15, family = 'serif')) +
   scale_fill_npg(name = "Functional Group") +
-  facet_wrap(~sim.type)
+  facet_grid(sim.type ~ Ecosite)
+
+base <- ggplot(PlantPop_yr_base, aes(fill = CPNM, y = plantPop, x = factor(Y))) +
+  geom_bar(position="stack", stat="identity") +
+  ylab("Herbaceous Plant Population (Basal Area %)") +
+  xlab("Year") +
+  ylim(0, 30) +
+  theme_bw() +
+  theme(text = element_text(size = 15, family = 'serif'),
+        axis.title.x = element_blank()) +
+  ylab(" ") +
+  scale_fill_npg(name = "Functional Group",
+                 guide = "none") +
+  facet_grid(sim.type ~ Ecosite)
+
+base / var +
+   plot_layout(heights = c(1,2))
