@@ -1,0 +1,43 @@
+agm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
+  filter(Year %in% c(2014:2023), ID %in% c(11:20)) %>%
+  group_by(Year) %>%
+  summarize(MeanWT = mean(WTG)) %>%
+  mutate(Type = "Simulated: no variability", SD = 0)
+
+tgm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
+  filter(Year %in% c(2014:2023), ID %in% c(1:10)) %>%
+  group_by(Year) %>%
+  summarize(MeanWT = mean(WTG)) %>%
+  mutate(Type = "Simulated: no variability", SD = 0)
+
+
+tgm_sim <- tgm_agz_base %>% 
+  mutate(Type = "Simulated",
+         Treatment = "TRM")
+agm_sim <- agm_agz_base %>% 
+  mutate(Type = "Simulated",
+         Treatment = "CARM")
+
+Gain_AGMO <- Gain_AGMO %>%
+  mutate(Treatment = "CARM")
+
+wt_gain <- rbind(tgm_sim, agm_sim, Gain_TGMO, Gain_AGMO)
+
+
+ggplot(wt_gain, aes(x = Treatment, y = MeanWT, fill = Type)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  geom_errorbar(aes(ymin = MeanWT - SD, ymax = MeanWT + SD,
+                    group = Type), width = 0.3, position = position_dodge(.9),
+                linewidth = 0.2) +
+  geom_text(aes(label = round(MeanWT,2)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.25,
+            fontface = "bold", family = "serif") +
+  ylab(expression(paste("Average Daily Weight Gain (kg ", hd ^-1," ", day ^-1,")"))) +
+  facet_grid(. ~ Year) +
+  xlab("Treatment") +
+  scale_fill_brewer(type = "qual", palette = "Dark2") +
+  theme(text = element_text(size = 15, family = 'serif')) +
+  theme_bw()

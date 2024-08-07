@@ -1,0 +1,18 @@
+agm_dgz <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.DGZ", 
+                      skip = 10, 
+                      header = FALSE, sep = "", col.names = name.dgz) %>%
+  mutate(Date = ymd(paste(Y,M,D, sep = "-"))) 
+
+agm_dgz_herd11 <- agm_dgz %>% filter(HERD == 11, Y == 2023)
+
+ggplot(agm_dgz_herd11,aes(x = Date, y = DWT)) +
+  geom_line()
+
+agm_dgz_herd12 <- agm_dgz %>% filter(HERD == 12, Y == 2023)
+
+ggplot(agm_dgz_herd12, aes(x = Date, y = DWT)) +
+  geom_line()
+
+mean(agm_dgz_herd11$DWT)
+ mean(agm_dgz_herd12$DWT)
+ 

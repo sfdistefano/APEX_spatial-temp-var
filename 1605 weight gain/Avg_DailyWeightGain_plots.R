@@ -18,7 +18,7 @@ cper_ppt <- read.csv("D:/APEX data and scripts/Data/CPER PPT/CPER daily climate 
   summarize(RainTotal_mm = sum(rain.mm.))
 
 ##### Experimental Observed Data ###############################################
-wtg <- read.csv("D:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2022.csv") %>%
+wtg <- read.csv("D:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2023_SD.csv") %>%
   mutate(gain = ADG / 2.2046) %>%
   merge(PastureID_20sa,by = 'Pasture', relationship = "many-to-many",
         all.x = TRUE)
@@ -51,31 +51,31 @@ name.agz <- c("SA", "ID", "Year", "Year_num", "CPNM",
               "WSAha", "PSTLkg/ha", "PSTDkg/ha", "PSTTkg/ha",
               "POP", "PEAK")
 
-agm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/03-APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+agm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
                            skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-  filter(Year %in% c(2014:2023), ID %in% c(1:10)) %>%
+  filter(Year %in% c(2014:2023), ID %in% c(11:20)) %>%
   group_by(Year) %>%
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: no variability", SD = 0)
 
-agm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/03-APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
+agm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_AGM - Copy/CONUNN_TGM.AGZ", 
                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023)) %>%
   group_by(Year) %>%
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: spatial variability", SD = 0)
 
-agm_dgz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/03-APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
-                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-  filter(Year %in% c(2014:2023)) %>%
-  group_by(Year) %>%
-  summarize(MeanWT = mean(WTG)) %>%
-  mutate(Type = "Simulated: spatial+temporal", SD = 0)
+# agm_dgz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
+#                               skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
+#   filter(Year %in% c(2014:2023)) %>%
+#   group_by(Year) %>%
+#   summarize(MeanWT = mean(WTG)) %>%
+#   mutate(Type = "Simulated: spatial+temporal", SD = 0)
 
 AGMGain <- rbind(Gain_AGMO, agm_agz_base, 
                  # agm_agz_pop, 
-                 agm_agz_var, 
-                 agm_dgz_var_pop
+                 agm_agz_var#, 
+                 # agm_dgz_var_pop
                  )
 
 ##### Visualizing scenario comparisons #########################################
@@ -131,31 +131,31 @@ ggplot() +
          shape = guide_legend(title = "Weight Gain Data"))
 
 ##### TRADITIONAL GRAZING ######################################################
-tgm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/03-APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+tgm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
                            skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023), ID %in% c(1:10)) %>%
   group_by(Year) %>%
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: no variability", SD = 0)
 
-tgm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/03-APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
+tgm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023)) %>%
   group_by(Year) %>%
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: spatial variability", SD = 0)
 
-tgm_agz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/03-APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
-                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-  filter(Year %in% c(2014:2023)) %>%
-  group_by(Year) %>%
-  summarize(MeanWT = mean(WTG)) %>%
-  mutate(Type = "Simulated: spatial+temporal variability", SD = 0)
+# tgm_agz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
+#                               skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
+#   filter(Year %in% c(2014:2023)) %>%
+#   group_by(Year) %>%
+#   summarize(MeanWT = mean(WTG)) %>%
+#   mutate(Type = "Simulated: spatial+temporal variability", SD = 0)
 
 TGMGain <- rbind(Gain_TGMO, 
                  tgm_agz_base, 
-                 tgm_agz_var, 
-                 tgm_agz_var_pop
+                 tgm_agz_var#, 
+                 #tgm_agz_var_pop
                  )
 
 ##### Visualizing scenario comparisons #########################################
@@ -206,122 +206,56 @@ ggplot() +
          shape = guide_legend(title = "Weight Gain Data"))
 
 ## Simulation comparison statistics (model performance)
-AGMGain_compare <- AGMGain %>%
-  select(-SD) %>%
-  filter(Type != "Measured") %>%
-  merge(Gain_AGMO, by = "Year") %>%
-  select(-SD, -Type.y) %>%
-  rename(Simulated = MeanWT.x, Observed = MeanWT.y,
-         Sim.Type = Type.x)  %>%
-  mutate(Treatment = "CARM")
-
-TGMGain_compare <- TGMGain %>%
-  select(-SD, -Treatment) %>%
-  filter(Type != "Measured") %>%
-  merge(Gain_TGMO, by = "Year") %>%
-  select(-SD, -Type.y) %>%
-  rename(Simulated = MeanWT.x, Observed = MeanWT.y,
-         Sim.Type = Type.x) 
-
-Gain_simStats <- rbind(AGMGain_compare, TGMGain_compare) %>%
-  group_by(Treatment, Sim.Type) %>%
-  summarise(rmse = round(rmse(Simulated, Observed), 2),
-            nrmse = nrmse(Simulated, Observed, norm = "maxmin")/100,
-            d = round(d(Simulated, Observed), 3),
-            pbias = pbias(Simulated, Observed))
-
-###### WEIGHT GAIN BY ECOSITE ##################################################
-##### OBSERVED ECOSITE WEIGHT GAIN #############################################
-# Gain_ecosite <- wtg %>%
-#   filter(Treatment == "TGM") %>%
-#   group_by(Year, Ecosite) %>%
-#   dplyr::summarise(MeanWT = mean(gain, na.rm = T),
-#                    stdevWT = sd(gain, na.rm = T),
-#                    Type = "Measured")
-# 
-# ##### SIMULATED ECOSITE WEIGHT GAIN ############################################
-# tgm_agz_base_es <- read.delim("D:/01-APEX1605_CO_baseline/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
-#                               skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014, ID %in% c(1:10)) %>%
-#   merge(PastureID_20sa, by = "ID", all.x = TRUE) %>%
-#   group_by(Year, Ecosite) %>%
-#   summarize(MeanWT = mean(WTG), stdevWT = 0) %>%
-#   mutate(Type = "Simulated: no variability")
-# 
-# tgm_agz_var_es <- read.delim("APEX1605_CO_92 subareas_div/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
-#                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014) %>%
-#   merge(PastureID, by = "ID", all.x = TRUE) %>%
-#   group_by(Year, Pasture) %>%
-#   summarize(WTG = mean(WTG)) %>%
-#   merge(PastureID_20sa, by = "Pasture", all.x = TRUE) %>%
-#   group_by(Year, Ecosite) %>%
-#   summarize(MeanWT = mean(WTG), stdevWT = 0) %>%
-#   mutate(Type = "Simulated: spatial variability")
-# 
-# tgm_agz_var_pop_es <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/APEX1605_CO_TGM/CONUNN_TGM.AGZ", 
-#                                  skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year >= 2014) %>%
-#   merge(PastureID, by = "ID", all.x = TRUE) %>%
-#   group_by(Year, Pasture) %>%
-#   summarize(WTG = mean(WTG)) %>%
-#   merge(PastureID_20sa, by = "Pasture", all.x = TRUE) %>%
-#   group_by(Year, Ecosite) %>%
-#   summarize(MeanWT = mean(WTG), stdevWT = 0) %>%
-#   mutate(Type = "Simulated: spatial+temporal variability")
-# 
-# 
-# ## Combine observed and simulated results
-# TGMGain_ecosite <- rbind(Gain_ecosite, 
-#                          tgm_agz_base_es, 
-#                          tgm_agz_var_es, 
-#                          tgm_agz_var_pop_es
-#                          )
-# 
-# ## Simulation comparison statistics (model performance)
-# TGMGain_compare_es <- TGMGain_ecosite %>%
-#   select(-stdevWT) %>%
+# AGMGain_compare <- AGMGain %>%
+#   select(-SD) %>%
 #   filter(Type != "Measured") %>%
-#   merge(Gain_ecosite, by = c("Year", "Ecosite")) %>%
-#   select(-stdevWT, -Type.y) %>%
+#   merge(Gain_AGMO, by = "Year") %>%
+#   select(-SD, -Type.y) %>%
+#   rename(Simulated = MeanWT.x, Observed = MeanWT.y,
+#          Sim.Type = Type.x)  %>%
+#   mutate(Treatment = "CARM")
+# 
+# TGMGain_compare <- TGMGain %>%
+#   select(-SD, -Treatment) %>%
+#   filter(Type != "Measured") %>%
+#   merge(Gain_TGMO, by = "Year") %>%
+#   select(-SD, -Type.y) %>%
 #   rename(Simulated = MeanWT.x, Observed = MeanWT.y,
 #          Sim.Type = Type.x) 
 # 
-# Gain_simStats_es <- TGMGain_compare_es %>%
-#   group_by(Ecosite, Sim.Type) %>%
+# Gain_simStats <- rbind(AGMGain_compare, TGMGain_compare) %>%
+#   group_by(Treatment, Sim.Type) %>%
 #   summarise(rmse = round(rmse(Simulated, Observed), 2),
-#             nrmse = round(nrmse(Simulated, Observed, norm = "maxmin")/100, 2),
-#             d = round(d(Simulated, Observed), 2),
-#             pbias = pbias(Simulated, Observed, dec = 2))
+#             nrmse = nrmse(Simulated, Observed, norm = "maxmin")/100,
+#             d = round(d(Simulated, Observed), 3),
+#             pbias = pbias(Simulated, Observed))
 
-###### VISUALIZE RESULTS #######################################################
+###### Plot of baseline scenario vs measured ###################################
+tgm_sim <- tgm_agz_base %>% 
+  mutate(Type = "Simulated",
+         Treatment = "TRM")
+agm_sim <- agm_agz_base %>% 
+  mutate(Type = "Simulated",
+         Treatment = "CARM")
 
-# ggplot() +
-#   geom_line(data = TGMGain_ecosite, aes(x = Year, y = MeanWT, 
-#                                         color = Type)) +
-#   geom_point(data = TGMGain_ecosite, aes(x = Year, y = MeanWT, 
-#                                          color = Type, shape = Type), 
-#              size = 3.5) +
-#   geom_errorbar(data = TGMGain_ecosite,
-#                 aes(x = Year, y = MeanWT,
-#                     ymin = MeanWT - stdevWT, 
-#                     ymax = MeanWT + stdevWT, 
-#                     color = Type),
-#                 width = 0.25) +
-#   geom_bar(data = ppt, aes(x = year, y = ppt_scale, 
-#                            fill = "Annual Precipitation"),
-#            alpha = 0.3,
-#            stat = 'identity') +
-#   scale_fill_manual(name = "Data Type", values = "steelblue") +
-#   scale_y_continuous("Mean Daily Weight Gain (kg/hd/day)", 
-#                      #limits = c(0,1.3),
-#                      sec.axis = sec_axis(~./coeff, name = "Annual Precipitation (mm)")) +
-#   facet_grid(.~Ecosite) +
-#   theme_bw() +
-#   scale_color_manual(values = cbbPalette) +
-#   scale_x_continuous(breaks = c(2014, 2015, 2016, 2017, 
-#                                 2018, 2019, 2020, 2021, 2023)) +
-#   scale_shape_manual(values = c(16,15,17,18,16))  +
-#   theme(text = element_text(size = 15, family = 'serif')) +
-#   guides(color = guide_legend(title = "Weight Gain Data"),
-#          shape= guide_legend(title = "Weight Gain Data"))
+Gain_AGMO <- Gain_AGMO %>%
+  mutate(Treatment = "CARM")
+
+wt_gain <- rbind(tgm_sim, agm_sim, Gain_TGMO, Gain_AGMO)
+
+
+ggplot(wt_gain, aes(x = Treatment, y = MeanWT, fill = Type)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  geom_errorbar(aes(ymin = MeanWT - SD, ymax = MeanWT + SD,
+                    group = Type), width = 0.3, position = position_dodge(.9),
+                linewidth = 0.2) +
+  geom_text(aes(label = round(MeanWT,2)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.25,
+            fontface = "bold", family = "serif") +
+  ylab(expression(paste("Average Daily Weight Gain (kg ", hd ^-1," ", day ^-1,")"))) +
+  facet_grid(. ~ Year) +
+  xlab("Treatment") +
+  scale_fill_brewer(type = "qual", palette = "Dark2") +
+  theme(text = element_text(size = 15, family = 'serif')) +
+  theme_bw()

@@ -1,7 +1,7 @@
 # Code written by Dr. Sean Di Stefano in January 2024
 # Code summarizes and visualizes average daily weight gain data from APEX v1605
 
-setwd("D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop")
+setwd("D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div")
 
 library(tidyverse)
 
@@ -18,12 +18,12 @@ name.dgz <- c("ISA", "ID", "HERD","IDOM", "Y", "M", "D", "WSAha", "GNAM", "HRDSZ
 
 ## Importing file and setting column names
 # Traditionally grazed pastures
-tgm_dgz <- read.delim("./Wt Gain Simulation/03-APEX1605_CO_TGM/CONUNN_TGM.DGZ", skip = 10, 
+tgm_dgz <- read.delim("./Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.DGZ", skip = 10, 
                       header = FALSE, sep = "", col.names = name.dgz) %>%
   mutate(Date = ymd(paste(Y,M,D, sep = "-"))) # adding date column
 
 # Rotationally (adaptively) grazed pastures 
-agm_dgz <- read.delim("./Wt Gain Simulation/03-APEX1605_CO_AGM/CONUNN_TGM.DGZ", skip = 10, 
+agm_dgz <- read.delim("./Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.DGZ", skip = 10, 
                       header = FALSE, sep = "", col.names = name.dgz) %>%
   mutate(Date = ymd(paste(Y,M,D, sep = "-")))
 

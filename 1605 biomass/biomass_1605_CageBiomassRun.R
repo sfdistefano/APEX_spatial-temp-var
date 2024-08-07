@@ -19,7 +19,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
   
   if(num.sa == 20){
     
-    path <- "./Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+    path <- "./Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
     
     ## Importing simulated data
     SimBiom <- fread(path, header = FALSE, skip = 2, 
@@ -97,8 +97,8 @@ bm_cag_combine <- function(num.sa = 20, direct){
     
   } else if(num.sa == 92) {
     
-    pathAGM <- "./Cage Biomass Simulation/03-APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
-    pathTRM <- "./Cage Biomass Simulation/03-APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
+    pathAGM <- "./Cage Biomass Simulation/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag"
+    pathTRM <- "./Cage Biomass Simulation/APEX1605_CO_TGM_cagebm/CONUNN_TGM.cag"
     
     # Importing simulated data
     SimBiom_AGM <- fread(pathAGM, header = FALSE, skip = 2,
@@ -216,14 +216,15 @@ Biomass_var_graze <- bm_cag_combine(num.sa = 92,
   mutate(Sim.Type = "Simulated: spatial variability")
 
 # ## Spatial + Temporal Variability
-Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
-                                        direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
-  mutate(Sim.Type = "Simulated: spatial+temporal variability")
+# Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
+#                                         direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
+#   mutate(Sim.Type = "Simulated: spatial+temporal variability")
 
 # ### COMPARE ACROSS SCENARIOS @ GRAZING TREATMENT LEVEL 
 Biomass_comb_graze <- rbind(Biomass_base_graze,
-                            Biomass_var_graze,
-                            Biomass_var_pop_graze)
+                            Biomass_var_graze#,
+                            #Biomass_var_pop_graze
+                            )
 
 ## Simulation stats
 graze_compare <- Biomass_comb_graze %>%
@@ -241,7 +242,7 @@ graze_simStats <- graze_compare %>%
 # write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/grazeTrt_simStats_07112024.csv")
 
 ## color blind friendly palette
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73")
+cbbPalette <- c("#000000", "#e41a1c", "#377eb8", "#4daf4a")
 
 ## Plot across grazing treatment*plant functional group
 ggplot()+
@@ -277,7 +278,7 @@ PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subarea
   mutate(Treatment = ifelse(Treatment == "TGM", "TRM", "CARM"))
 
 ## Importing simulated data
-path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
 
 SimBiom <- fread(path, header = FALSE, skip = 2, 
                  col.names = name.cag, fill = TRUE) %>%
@@ -354,7 +355,7 @@ Biomass_trt_grazeTotal <- merge(Biomass_trt, Biomass_pasture_se,
                             by = c("Date", "Treatment", "Type"))
 
 ## Simulated Plant Stress Data
-path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/03-APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
 
 ## Importing simulated data
 SimBiom_plantStress <- fread(path, header = FALSE, skip = 2, 
