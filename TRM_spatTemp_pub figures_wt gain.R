@@ -1,3 +1,9 @@
+library(tidyverse)
+library(reshape2)
+library(data.table)
+library(ggsci)
+library(hydroGOF)
+
 ##### ANNUAL GRAZING FILE (.AGZ) ###############################################
 
 # Importing reference information for pastures
@@ -5,7 +11,7 @@ PastureID <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_92subarea
   filter(Treatment == "TRM")
 PastureID_20sa <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
 
-## Function to read and process simulated data
+### Function to read and process simulated data by grazing treatment
 prepare_weight_data_agz <- function(file_path, years, id_filter, sim_type) {
   data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE) %>%
     filter(YR %in% years, ID %in% id_filter) %>%
@@ -44,13 +50,13 @@ tgm_weight_data_noVar_yearly <- prepare_weight_data_agz(
 # Spatial variability simulation scenario
 tgm_weight_data_spatVar_yearly <- prepare_weight_data_agz(
   "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ",
-  years, 1:10, "Simulated: spatial variability"
+  years, 1:46, "Simulated: spatial variability"
 )
 
 # Spatial + temporal variability simulation scenario
 tgm_weight_data_spatTempVar_yearly <- prepare_weight_data_agz(
   "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ",
-  years, 1:10, "Simulated: spatial + temporal variability"
+  years, 1:46, "Simulated: spatial + temporal variability"
 )
 
 ## Combining all traditional grazing observed and simulated data
@@ -78,6 +84,60 @@ ggplot(tgm_weight_data_yearly, aes(x = factor(Year), y = MeanWT, fill = Type)) +
   scale_fill_brewer(palette = "Set3") +
   theme(text = element_text(size = 15, family = 'serif'))
 
+### Function to read and process simulated data by ecological site
+prepare_weight_data_agz_ecosite <- function(file_path, years, sim_type) {
+  data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE) %>%
+    filter(YR %in% years) %>%
+    merge(PastureID, by = "ID") %>%
+    group_by(YR, Ecosite) %>%
+    summarize(MeanWT = mean(WTGkg.hd.d, na.rm = TRUE),
+              SD = sd(WTGkg.hd.d)) %>%
+    mutate(Type = sim_type) %>%
+    rename(Year = YR)
+}
+
+# Spatial variability simulation scenario
+tgm_weight_data_spatVar_ecosite <- prepare_weight_data_agz_ecosite("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ",
+                                                                   years, "Simulated: spatial variability")
+# Spatial + temporal variability simulation scenario
+tgm_weight_data_spatTempVar_ecosite <- prepare_weight_data_agz_ecosite("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_TGM/CONUNN_TGM.AGZ",
+                                                                       years, "Simulated: spatial + temporal variability")
+
+# Combining both variability scenarios
+tgm_weight_data_ecosite <- rbind(tgm_weight_data_spatVar_ecosite, tgm_weight_data_spatTempVar_ecosite)
+
+# Reorder the Ecosite factor levels
+tgm_weight_data_ecosite$Ecosite <- factor(tgm_weight_data_ecosite$Ecosite, 
+                                          levels = c("Loamy","Salt Flats", "Sandy"))
+
+# Reorder the Type factor levels
+tgm_weight_data_ecosite$Type <- factor(tgm_weight_data_ecosite$Type, 
+                                       levels = c("Simulated: spatial variability", 
+                                                  "Simulated: spatial + temporal variability"))
+
+
+# Get the Set3 palette colors
+set3_colors <- brewer.pal(n = 12, name = "Set3")
+
+# Select the 2nd and 3rd colors from Set3
+selected_colors <- set3_colors[3:4]
+
+
+## Visualizing differences in mean daily weight gain (yearly) between ecological sites
+ggplot(tgm_weight_data_ecosite, aes(x = factor(Year), y = MeanWT, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  geom_errorbar(aes(ymin = MeanWT - SD, ymax = MeanWT + SD), 
+                position = position_dodge(width = 0.9), width = 0.25) +  # Error bars
+  geom_text(aes(label = round(MeanWT, 2)),
+            position = position_dodge(width = 0.9),
+            vjust = -1.75, size = 4, family ='serif') +  # Adjust padding around the text
+  facet_wrap(.~Ecosite, ncol = 1) +
+  labs(x = "Year", 
+       y = "Mean Daily Weight Gain (kg/head/day)", 
+       fill = "Data Source") +  # Labels and legend title
+  theme_bw() +   # Clean theme
+  theme(text = element_text(size = 15, family = 'serif')) +
+  scale_fill_manual(values = selected_colors)
 
 ##### DAILY GRAZING FILE (.DGZ) ################################################
 
