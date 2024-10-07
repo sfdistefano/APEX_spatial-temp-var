@@ -4,21 +4,21 @@ library(data.table)
 library(ggsci)
 library(hydroGOF)
 
-setwd("D:/02-APEX1605_spatialtemp/")
+setwd("C:/02-APEX1605_spatialtemp/")
 
 
-PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv") %>%
+PastureID <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv") %>%
   filter(Treatment == "TRM")
-PastureID_20sa <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
+PastureID_20sa <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
 
 ## Daily precipitation data from Nicole Kaplan
-cper_ppt <- read.csv("D:/APEX data and scripts/Data/CPER PPT/CPER daily climate data_model input.csv") %>%
+cper_ppt <- read.csv("C:/APEX data and scripts/Data/CPER PPT/CPER daily climate data_model input.csv") %>%
   filter(year >= 2014) %>% # filtering for first year of CARM experiment
   group_by(year) %>%
   summarize(RainTotal_mm = sum(rain.mm.))
 
 ##### Experimental Observed Data ###############################################
-wtg <- read.csv("D:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2023_SD.csv") %>%
+wtg <- read.csv("C:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2023_SD.csv") %>%
   mutate(gain = ADG / 2.2046) %>%
   merge(PastureID_20sa,by = 'Pasture', relationship = "many-to-many",
         all.x = TRUE)
@@ -51,7 +51,7 @@ name.agz <- c("SA", "ID", "Year", "Year_num", "CPNM",
               "WSAha", "PSTLkg/ha", "PSTDkg/ha", "PSTTkg/ha",
               "POP", "PEAK")
 
-agm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+agm_agz_base <- read.delim("C:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
                            skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023), ID %in% c(11:20)) %>%
   group_by(Year) %>%
@@ -131,7 +131,7 @@ ggplot() +
          shape = guide_legend(title = "Weight Gain Data"))
 
 ##### TRADITIONAL GRAZING ######################################################
-tgm_agz_base <- read.delim("D:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
+tgm_agz_base <- read.delim("C:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ", 
                            skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023), ID %in% c(1:10)) %>%
   group_by(Year) %>%

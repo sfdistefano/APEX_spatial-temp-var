@@ -1,7 +1,6 @@
 ## Code written by Sean Di Stefano 03/2024, altered from code written by Gong Cheng
 
 library(tidyverse)
-library(reshape2)
 library(data.table)
 library(hydroGOF)
 
@@ -216,9 +215,9 @@ Biomass_var_graze <- bm_cag_combine(num.sa = 92,
   mutate(Sim.Type = "Simulated: spatial variability")
 
 # ## Spatial + Temporal Variability
-# Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
-#                                         direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
-#   mutate(Sim.Type = "Simulated: spatial+temporal variability")
+Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
+                                        direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
+  mutate(Sim.Type = "Simulated: spatial+temporal variability")
 
 # ### COMPARE ACROSS SCENARIOS @ GRAZING TREATMENT LEVEL 
 Biomass_comb_graze <- rbind(Biomass_base_graze,

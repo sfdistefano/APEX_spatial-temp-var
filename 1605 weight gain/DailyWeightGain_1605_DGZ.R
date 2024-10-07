@@ -1,7 +1,7 @@
 # Code written by Dr. Sean Di Stefano in January 2024
 # Code summarizes and visualizes average daily weight gain data from APEX v1605
 
-setwd("D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div")
+setwd("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div")
 
 library(tidyverse)
 
