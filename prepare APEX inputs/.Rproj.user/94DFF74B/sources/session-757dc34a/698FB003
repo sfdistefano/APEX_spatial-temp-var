@@ -1,0 +1,24 @@
+{
+    "id": "698FB003",
+    "path": "~/GitHub/APEX_spatial-temp-var/prepare APEX inputs/prepare_CANOPY input_92 subareas.R",
+    "project_path": "prepare_CANOPY input_92 subareas.R",
+    "type": "r_source",
+    "hash": "778584718",
+    "contents": "",
+    "dirty": false,
+    "created": 1729088260822.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1727118485,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1727118485,
+    "read_only": false,
+    "read_only_alternatives": []
+}

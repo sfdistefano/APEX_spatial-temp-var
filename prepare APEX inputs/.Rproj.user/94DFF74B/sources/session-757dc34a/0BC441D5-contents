@@ -1,0 +1,10 @@
+plant.pop_sa20 <- merge(plant.pop %>% dplyr::select(-ID), # removing plot ID to keep pasture-level ID from PastureID_sa20 dataframe
+                        PastureID_sa20,
+                        by = c("Pasture", "Treatment"),
+                        all.x = TRUE) %>%
+  group_by(Pasture, ID, Treatment, apex.code) %>% 
+  summarize(apex.input_sa20 = round(mean(apex.input), 2),
+            # calculating the range of biomass production within each pasture
+            fg_min = round(min(apex.input),2), 
+            fg_max = round(max(apex.input),2)) %>%
+  rename(apex.input = apex.input_sa20)

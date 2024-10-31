@@ -388,63 +388,63 @@ process_sim_plantStress <- function(path, year_range = c(2014:2018),
   return(plantStress_long)
 }
 
-plantStress_var_ecosite <- process_sim_plantStress("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Cage Biomass Simulation/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag",
-                                                   id_filter = c(1:46))
-
-plantStress_var_pop_ecosite <- process_sim_plantStress("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Cage Biomass Simulation/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag",
-                                                       id_filter = c(1:46))
-
-ggplot(plantStress_var_ecosite, aes(x = Date, y = Value, 
-                                    color = Stress_Type, 
-                                    linetype = Stress_Type)) +
-  geom_line(aes(color = Stress_Type)) +  
-  scale_color_manual(values = c("Water Stress" = "steelblue2", 
-                                "Temperature Stress" = "sienna3")) +
-  scale_linetype_manual(values = c("Water Stress" = "solid", 
-                                   "Temperature Stress" = "dashed")) +
-  facet_grid(factor(CPNM, 
-                    levels = c("WSPG", "CSPG", "FORB", "SSHB", "CSAG")) ~ Ecosite) +
-  theme_bw() +
-  theme(text = element_text(size = 15, family = 'serif'),
-        axis.text.x = element_text(angle = 90),
-        panel.spacing = unit(0.75, "lines")) +
-  labs(x = "Date",
-       y = "Plant Stress (0-1)",
-       color = "Stress Type Color",
-       linetype = "Stress Type Line") +  
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y")
-
-ggplot(plantStress_var_pop_ecosite, aes(x = Date, y = Value, 
-                                        color = Stress_Type, 
-                                        linetype = Stress_Type)) +
-  geom_line(aes(color = Stress_Type)) +  
-  scale_color_manual(values = c("Water Stress" = "steelblue2", 
-                                "Temperature Stress" = "sienna3")) +
-  scale_linetype_manual(values = c("Water Stress" = "solid", 
-                                   "Temperature Stress" = "dashed")) +
-  facet_grid(factor(CPNM, 
-                    levels = c("WSPG", "CSPG", "FORB", "SSHB", "CSAG")) ~ Ecosite) +
-  theme_bw() +
-  theme(text = element_text(size = 15, family = 'serif'),
-        axis.text.x = element_text(angle = 90),
-        panel.spacing = unit(0.75, "lines")) +
-  labs(x = "Date",
-       y = "Plant Stress (0-1)",
-       color = "Stress Type Color",
-       linetype = "Stress Type Line") +  
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y")
-
-## Summarizing data by year for each plant stress type
-plantStress_var_ecosite_yearly <- plantStress_var_ecosite %>%
-  group_by(year(Date), Ecosite, Stress_Type) %>%
-  summarize(yearly_mean_stress = mean(Value)) %>%
-  mutate(Type = "Spatial Variability")
-
-plantStress_var_pop_ecosite_yearly <- plantStress_var_pop_ecosite %>%
-  group_by(year(Date), Ecosite, Stress_Type) %>%
-  summarize(yearly_mean_stress = mean(Value)) %>%
-  mutate(Type = "Spatial + Temporal Variability")
-
-plantStress_ecosite_yearly <- rbind(plantStress_var_ecosite_yearly, plantStress_var_pop_ecosite_yearly)
+# plantStress_var_ecosite <- process_sim_plantStress("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Cage Biomass Simulation/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag",
+#                                                    id_filter = c(1:46))
+# 
+# plantStress_var_pop_ecosite <- process_sim_plantStress("C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/Cage Biomass Simulation/APEX1605_CO_AGM_cagebm/CONUNN_TGM.cag",
+#                                                        id_filter = c(1:46))
+# 
+# ggplot(plantStress_var_ecosite, aes(x = Date, y = Value, 
+#                                     color = Stress_Type, 
+#                                     linetype = Stress_Type)) +
+#   geom_line(aes(color = Stress_Type)) +  
+#   scale_color_manual(values = c("Water Stress" = "steelblue2", 
+#                                 "Temperature Stress" = "sienna3")) +
+#   scale_linetype_manual(values = c("Water Stress" = "solid", 
+#                                    "Temperature Stress" = "dashed")) +
+#   facet_grid(factor(CPNM, 
+#                     levels = c("WSPG", "CSPG", "FORB", "SSHB", "CSAG")) ~ Ecosite) +
+#   theme_bw() +
+#   theme(text = element_text(size = 15, family = 'serif'),
+#         axis.text.x = element_text(angle = 90),
+#         panel.spacing = unit(0.75, "lines")) +
+#   labs(x = "Date",
+#        y = "Plant Stress (0-1)",
+#        color = "Stress Type Color",
+#        linetype = "Stress Type Line") +  
+#   scale_x_date(date_breaks = "1 year", date_labels = "%Y")
+# 
+# ggplot(plantStress_var_pop_ecosite, aes(x = Date, y = Value, 
+#                                         color = Stress_Type, 
+#                                         linetype = Stress_Type)) +
+#   geom_line(aes(color = Stress_Type)) +  
+#   scale_color_manual(values = c("Water Stress" = "steelblue2", 
+#                                 "Temperature Stress" = "sienna3")) +
+#   scale_linetype_manual(values = c("Water Stress" = "solid", 
+#                                    "Temperature Stress" = "dashed")) +
+#   facet_grid(factor(CPNM, 
+#                     levels = c("WSPG", "CSPG", "FORB", "SSHB", "CSAG")) ~ Ecosite) +
+#   theme_bw() +
+#   theme(text = element_text(size = 15, family = 'serif'),
+#         axis.text.x = element_text(angle = 90),
+#         panel.spacing = unit(0.75, "lines")) +
+#   labs(x = "Date",
+#        y = "Plant Stress (0-1)",
+#        color = "Stress Type Color",
+#        linetype = "Stress Type Line") +  
+#   scale_x_date(date_breaks = "1 year", date_labels = "%Y")
+# 
+# ## Summarizing data by year for each plant stress type
+# plantStress_var_ecosite_yearly <- plantStress_var_ecosite %>%
+#   group_by(year(Date), Ecosite, Stress_Type) %>%
+#   summarize(yearly_mean_stress = mean(Value)) %>%
+#   mutate(Type = "Spatial Variability")
+# 
+# plantStress_var_pop_ecosite_yearly <- plantStress_var_pop_ecosite %>%
+#   group_by(year(Date), Ecosite, Stress_Type) %>%
+#   summarize(yearly_mean_stress = mean(Value)) %>%
+#   mutate(Type = "Spatial + Temporal Variability")
+# 
+# plantStress_ecosite_yearly <- rbind(plantStress_var_ecosite_yearly, plantStress_var_pop_ecosite_yearly)
 
 # write.csv(plantStress_ecosite_yearly, "C:/APEX data and scripts/APEX outputs/plantStress_yearly_mean.csv")

@@ -28,7 +28,7 @@ agm_dgz <- read.delim("./Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.DGZ", ski
   mutate(Date = ymd(paste(Y,M,D, sep = "-")))
 
 ## Daily precipitation data from Nicole Kaplan
-cper_ppt <- read.csv("D:/APEX data and scripts/Data/CPER PPT/CPER daily climate data_model input.csv") %>%
+cper_ppt <- read.csv("C:/APEX data and scripts/Data/CPER PPT/CPER daily climate data_model input.csv") %>%
   filter(year >= 2014) %>% # filtering for first year of CARM experiment
   mutate(date = ymd(paste(year,month,day, sep = "-"))) %>%
   group_by(year, date) %>%

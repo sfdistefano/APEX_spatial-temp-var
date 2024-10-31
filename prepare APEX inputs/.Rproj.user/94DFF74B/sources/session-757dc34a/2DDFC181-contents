@@ -1,0 +1,11 @@
+opc.input_basal_TEST <- merge(basal.area_plot, PastureID_sa92,
+                         by = c("Pasture", "Treatment","Ecosite", 
+                                "Plot", "Block"),
+                         all.x = TRUE) %>%
+  group_by(ID, Treatment, apex.code) %>%
+  summarize(apex.input = round(mean(meanBasalcoverFG), 2)) %>%
+  # Add a new group with apex.code 300 to combine 300 and 301
+  mutate(apex.code = ifelse(apex.code %in% c(300, 301), 300, apex.code)) %>%
+  group_by(ID, Treatment, apex.code) %>%
+  summarize(apex.input = sum(apex.input)) %>%
+  ungroup()

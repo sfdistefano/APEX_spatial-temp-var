@@ -31,7 +31,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(Y:D))
     
     ## Importing reference information
-    PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
+    PastureID <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
       mutate(Treatment = ifelse(Treatment == "TGM", "TRM", "CARM"))
     
     ## Cleaning simulated data
@@ -46,7 +46,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(STL:STD), -c(STL_kgha:STD_kgha))
     
     ## Importing observational data
-    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
+    obv22 <- read.csv("C:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
       select(2:13,17) %>%
       mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
       dplyr::rename(Year = YearSampled) %>%
@@ -119,7 +119,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(Y:D))
     
     ## Importing reference information
-    PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
+    PastureID <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
     
     ## Cleaning reference information
     SimBiom02_AGM <- merge(SimBiom_AGM, PastureID,
@@ -143,7 +143,7 @@ bm_cag_combine <- function(num.sa = 20, direct){
       select(-c(STL:STD), -c(STL_kgha:STD_kgha))
     
     ## Importing observational data
-    obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
+    obv22 <- read.csv("C:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
       select(2:13,17) %>%
       mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
       dplyr::rename(Year = YearSampled) %>%
@@ -206,17 +206,17 @@ bm_cag_combine <- function(num.sa = 20, direct){
 
 ## Baseline
 Biomass_base_graze <- bm_cag_combine(num.sa = 20, 
-                                     direct = "D:/01-APEX1605_CO_baseline/")  %>% 
+                                     direct = "C:/01-APEX1605_CO_baseline/")  %>% 
   mutate(Sim.Type = "Simulated: no variability") 
 
 ## Spatial Variability
 Biomass_var_graze <- bm_cag_combine(num.sa = 92,
-                                    direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div") %>%
+                                    direct = "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div") %>%
   mutate(Sim.Type = "Simulated: spatial variability")
 
 # ## Spatial + Temporal Variability
 Biomass_var_pop_graze <- bm_cag_combine(num.sa = 92,
-                                        direct = "D:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
+                                        direct = "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop") %>%
   mutate(Sim.Type = "Simulated: spatial+temporal variability")
 
 # ### COMPARE ACROSS SCENARIOS @ GRAZING TREATMENT LEVEL 
@@ -238,7 +238,7 @@ graze_simStats <- graze_compare %>%
             d = round(d(Simulated, Observed), 2),
             pbias = pbias(Simulated, Observed, dec = 2))
 
-# write.csv(graze_simStats, "D:/APEX data and scripts/APEX outputs/grazeTrt_simStats_07112024.csv")
+# write.csv(graze_simStats, "C:/APEX data and scripts/APEX outputs/grazeTrt_simStats_07112024.csv")
 
 ## color blind friendly palette
 cbbPalette <- c("#000000", "#e41a1c", "#377eb8", "#4daf4a")
@@ -273,11 +273,11 @@ ggplot()+
 
 ##### NO VARIABILITY SCENARIO ##################################################
 ## Importing reference information
-PastureID <- read.csv("D:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
+PastureID <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
   mutate(Treatment = ifelse(Treatment == "TGM", "TRM", "CARM"))
 
 ## Importing simulated data
-path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+path <- "C:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
 
 SimBiom <- fread(path, header = FALSE, skip = 2, 
                  col.names = name.cag, fill = TRUE) %>%
@@ -299,7 +299,7 @@ SimBiom02 <- merge(SimBiom, PastureID,
   select(-c(STL:STD), -c(STL_kgha:STD_kgha))
 
 ## Importing observational data
-obv22 <- read.csv("D:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
+obv22 <- read.csv("C:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", header = T)%>%
   select(2:13,17) %>%
   mutate(CSAG = AG, WSPG = (BOBU+WSPG)/2, CSPG = C3PG) %>%
   dplyr::rename(Year = YearSampled) %>%
@@ -354,7 +354,7 @@ Biomass_trt_grazeTotal <- merge(Biomass_trt, Biomass_pasture_se,
                             by = c("Date", "Treatment", "Type"))
 
 ## Simulated Plant Stress Data
-path <- "D:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
+path <- "C:/01-APEX1605_CO_baseline/Cage Biomass Simulation/APEX1605_CO_all20_cagebm/CONUNN_TGM.cag"
 
 ## Importing simulated data
 SimBiom_plantStress <- fread(path, header = FALSE, skip = 2, 
