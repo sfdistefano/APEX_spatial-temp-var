@@ -41,6 +41,7 @@ opc.input_basal <- merge(basal.area_plot, PastureID_sa92,
   mutate(apex.code = ifelse(apex.code %in% c(300, 301), 300, apex.code)) %>%
   group_by(Pasture, Plot, ID, Treatment, apex.code) %>%
   summarize(apex.input = sum(apex.input)) %>%
+  filter(apex.code != 340) %>%
   ungroup()
 
 ##### SHRUB DENSITY ############################################################
@@ -54,16 +55,27 @@ shrub.density <- read.csv("C:/APEX data and scripts/Data/CPER Plant Pop/CARM_shr
 shrub.density$Pasture <- gsub(pattern = "NH", replacement = "10S",
                               x = shrub.density$Pasture)
 
-# summarizing data to plot
+## summarizing data to plot
 shrub.summ_plot <- shrub.density %>%
-  # grouping plant functional groups into SS (sub-shrub) or ATCA (four-wing saltbush)
-  mutate(CPNM = ifelse(CPNM %in% c("ARFR", "EREF", "ERNA", "GUSA", "KRLA", "YUGL"),
-                       "SS", "ATCA")) %>%
   group_by(YEAR, Pasture, Plot, Ecosite, CPNM) %>%
   summarize(density = round(mean(density), 2)) %>%
   filter(YEAR %in% c(2014:2018))
 
-# adding pastureID and APEX plant code,summarizing data by Pasture * Plant Functional Group
+# calculating average density for CPNM = "SS" by YEAR, Pasture, Ecosite, and Plot
+summed_ss_density <- shrub.summ_plot %>%
+  filter(CPNM %in% c("ARFR", "EREF", "ERNA", "GUSA", "KRLA", "YUGL")) %>%
+  mutate(CPNM = "SS") %>% # creating a new category for summed SS
+  group_by(YEAR, Pasture, Plot, Ecosite, CPNM) %>%
+  summarize(density = round(sum(density), 2)) 
+
+# separate ATCA rows for later combination
+atca_density <- shrub.summ_plot %>%
+  filter(CPNM == "ATCA")
+
+# combining both plant types to shrub.summ_plot (SS [sub-shrub] or ATCA [four-wing saltbush])
+shrub.summ_plot <- bind_rows(summed_ss_density, atca_density)
+
+## adding pastureID and APEX plant code,summarizing data by Pasture * Plant Functional Group
 opc.input_shrub <- merge(shrub.summ_plot, PastureID_sa92,
                          by = c("Pasture", "Ecosite", "Plot"),
                          all.x = TRUE) %>%
@@ -75,7 +87,7 @@ opc.input_shrub <- merge(shrub.summ_plot, PastureID_sa92,
 # combine both data types
 plant.pop <- rbind(opc.input_basal,opc.input_shrub)
 
-write.csv(plant.pop, "C:/APEX data and scripts/APEX inputs/input_OPC_subareas92_10312024.csv")
+write.csv(plant.pop, "C:/APEX data and scripts/APEX inputs/input_OPC_subareas92_11022024.csv")
 
 ###### SUMMARIZING DATA BY PASTURE (20 subareas) ###############################
 PastureID_sa20 <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv") %>%
