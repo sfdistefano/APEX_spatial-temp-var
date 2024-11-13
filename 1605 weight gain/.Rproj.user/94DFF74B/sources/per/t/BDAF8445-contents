@@ -58,24 +58,24 @@ agm_agz_base <- read.delim("C:/01-APEX1605_CO_baseline/Wt Gain Simulation/APEX16
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: no variability", SD = 0)
 
-agm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_AGM - Copy/CONUNN_TGM.AGZ", 
+agm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
                           skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
   filter(Year %in% c(2014:2023)) %>%
   group_by(Year) %>%
   summarize(MeanWT = mean(WTG)) %>%
   mutate(Type = "Simulated: spatial variability", SD = 0)
 
-# agm_dgz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.AGZ", 
-#                               skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
-#   filter(Year %in% c(2014:2023)) %>%
-#   group_by(Year) %>%
-#   summarize(MeanWT = mean(WTG)) %>%
-#   mutate(Type = "Simulated: spatial+temporal", SD = 0)
+agm_dgz_var_pop <- read.delim("APEX1605_CO_92 subareas_div_dyn plant pop/Wt Gain Simulation/APEX1605_CO_AGM/CONUNN_TGM.AGZ",
+                              skip = 10, header = FALSE, sep = "", col.names = name.agz) %>%
+  filter(Year %in% c(2014:2023)) %>%
+  group_by(Year) %>%
+  summarize(MeanWT = mean(WTG)) %>%
+  mutate(Type = "Simulated: spatial+temporal", SD = 0)
 
 AGMGain <- rbind(Gain_AGMO, agm_agz_base, 
                  # agm_agz_pop, 
-                 agm_agz_var#, 
-                 # agm_dgz_var_pop
+                 agm_agz_var, 
+                 agm_dgz_var_pop
                  )
 
 ##### Visualizing scenario comparisons #########################################
@@ -154,8 +154,8 @@ tgm_agz_var <- read.delim("APEX1605_CO_92 subareas_div/Wt Gain Simulation/APEX16
 
 TGMGain <- rbind(Gain_TGMO, 
                  tgm_agz_base, 
-                 tgm_agz_var#, 
-                 #tgm_agz_var_pop
+                 tgm_agz_var, 
+                 tgm_agz_var_pop
                  )
 
 ##### Visualizing scenario comparisons #########################################
