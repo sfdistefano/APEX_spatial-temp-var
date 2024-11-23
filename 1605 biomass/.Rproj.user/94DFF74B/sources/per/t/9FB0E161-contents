@@ -11,11 +11,11 @@ path <- "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/Cage Biomass Sim
 # - Filter data to only include years 2014-2018
 # - Add a new column for date and ensure 'ID' is treated as an integer
 biomass_cageSim_spatVar <- fread(path, fill = TRUE, skip = 9, header = TRUE) %>%
-  select(ID, Y, M, D, CPNM, 'AB_DDMkg/ha') %>%
+  select(ID, Y, M, D, CPNM, 'A_DDMkg/ha') %>%
   filter(Y %in% c(2014:2018)) %>%
   mutate(Date = ymd(paste(Y, M, D, sep = "-")),
          ID = as.integer(ID)) %>%
-  rename(DDMkg_ha = 'AB_DDMkg/ha') # Rename biomass column for easier referencing
+  rename(DDMkg_ha = 'A_DDMkg/ha') # Rename biomass column for easier referencing
 
 # Read in the pasture metadata
 # - This file links spatial subareas to specific pastures and ecological sites
@@ -33,13 +33,15 @@ biomass_cageSim_spatVar_v03 <- biomass_cageSim_spatVar_v02 %>%
   # Compute cumulative biomass (acc_DDM) for each year and subarea
   mutate(acc_DDM = cumsum(DDMkg_ha)) %>%
   # Filter to retain only rows corresponding to August 12th and a specific treatment (e.g., "TRM")
-  filter(month(Date) == 8 & day(Date) == 12, Treatment == "TRM") %>%
+  filter(month(Date) == 8 & day(Date) == 12#, 
+         #Treatment == "TRM"
+         ) %>%
   ungroup() %>%
   mutate(Plot = as.factor(Plot)) %>%
   select(-DDMkg_ha) # Drop the original biomass column to simplify the dataset
 
 # (Optional) Save the processed data to a CSV file for further analysis or sharing
-# write.csv(biomass_cageSim_spatVar_v03, "C:/APEX data and scripts/Data/SeanD_TRM sim biomass_11132024.csv")
+# write.csv(biomass_cageSim_spatVar_v03, "C:/APEX data and scripts/Data/SeanD_ALL sim biomass_11232024.csv")
 
 # Plot the cumulative biomass accumulation
 # - Use a line plot with 'Date' on the x-axis and cumulative biomass ('acc_DDM') on the y-axis

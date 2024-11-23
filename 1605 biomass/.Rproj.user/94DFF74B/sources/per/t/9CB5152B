@@ -1,0 +1,27 @@
+{
+    "id": "9CB5152B",
+    "path": "~/GitHub/APEX_spatial-temp-var/1605 biomass/biomass_scratchpad03.R",
+    "project_path": "biomass_scratchpad03.R",
+    "type": "r_source",
+    "hash": "2381851068",
+    "contents": "",
+    "dirty": false,
+    "created": 1732382817082.0,
+    "source_on_save": false,
+    "relative_order": 11,
+    "properties": {
+        "tempName": "Untitled8",
+        "source_window_id": "w0ikpkt5a2lo2",
+        "Source": "Source",
+        "cursorPosition": "10,38",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1732384244,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1732384244471,
+    "read_only": false,
+    "read_only_alternatives": []
+}
