@@ -34,4 +34,4 @@ biomass_plot <- ggplot(biomass_summary, aes(x = month_day, y = mean_DDMkg_ha, co
 print(biomass_plot)
 
 # Save the plot to a .png file
-ggsave(filename = "acc_biomass_plot.png", plot = biomass_plot, width = 12, height = 8, dpi = 300)
+# ggsave(filename = "acc_biomass_plot.png", plot = biomass_plot, width = 12, height = 8, dpi = 300)

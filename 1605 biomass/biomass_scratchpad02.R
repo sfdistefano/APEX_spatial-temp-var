@@ -63,5 +63,7 @@ observed_data_v04 <- observed_data_v03 %>%
   group_by(Year, Date, Treatment, APEXcodeFG) %>%
   summarize(SDkgPerHa = sd(MeankgPerHa_pasture, na.rm = TRUE),
          MeankgPerHa = mean(MeankgPerHa_pasture), .groups = 'drop') %>%
-  rename(Y = Year) %>%
-  filter(Y <= 2018)
+  filter(Year <= 2018) %>%
+  mutate(month_day = format(Date, "%m-%d"),
+         Y = as.character(Year)) %>%
+  rename(CPNM = APEXcodeFG)
