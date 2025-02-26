@@ -1,0 +1,15 @@
+
+file_path <- "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ"
+years <- c(2014:2018)
+
+agz_noVar <- data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE) %>%
+  filter(YR %in% years) %>%
+  mutate(Treatment = ifelse(HERD %in% c(1:10), "TRM", "CARM"))
+
+write.csv(agz_noVar, "C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/agz_noVar.csv")
+
+agz_noVar_dmi <- agz_noVar %>%
+  mutate(cpnm_dmi = GZSLkg.ha + GZSDkg.ha) %>%
+  group_by(YR, Treatment, HERD, ID) %>%
+  summarize(total_dmi = sum(cpnm_dmi))  
+  

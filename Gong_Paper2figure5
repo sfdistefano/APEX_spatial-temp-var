@@ -1,0 +1,173 @@
+setwd("D:/Data/APEX3")
+library(tidyverse)
+library(reshape2)
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(data.table)
+
+name.dgz <- c("ISA", "ID", "IDOM", "Y", "M", "D", "WSAha", "GNAM", "HRDSZhd", 
+              "RSTKha/hd","GZWTkg", "TEMPc", "H2ODl/hd", "FORG", "STLt/ha", 
+              "HUSC", "NCNLg/g", "STDt/ha","NCNDg/g", "DMDkg/ha", "FVI", "TDN", 
+              "SPLPkg/ha", "SPLDkg/ha", "SPLUkg/ha", "SPDPkg/ha", "SPDDkg/ha", 
+              "SPDUkg/ha", "HAYkg/ha", "GZSLkg/ha", "GZSDkg/ha", "DTDN", 
+              "DCNCg/g", "FECEkg/hd", "FECNkg/hd", "FECPkg/hd", "URINkg/hd", 
+              "URNNkg/hd", "URNPkg/hd", "H20Fkg/hd", "H2OCkg/hd", "MILKkg/hd", 
+              "GZNBhd","CALVEShd", "CAWTkg", "CAGZkg", "CH4g","DWT")
+
+####4. input intake simulated data ####
+gain.d.agm <- read.table("./main/APEX1605_CO_AGM/CONUNN_AGM.DGZ", header = F, 
+                         skip = 10, col.names = name.dgz) %>%
+  mutate(INK=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`),
+         DM = GZWTkg * 0.026,
+         TDN=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`) * DTDN) %>% 
+  select(ID, Y, M, D, DWT, INK, TDN, DM) %>% 
+  group_by(ID, Y, M, D) %>% summarise(DWtG = mean(DWT), TN = sum(TDN),
+                                      DE = mean(DM),
+                                      INtK = sum(INK)) %>%
+  subset(Y %in% c(2014: 2018) & M %in% c(5: 9)) %>%
+  group_by(M, D) %>% summarise(DWG = mean(DWtG), TDN = mean(TN),
+                               DM = mean(DE),
+                               INK = mean(INtK)) %>%
+  mutate(Grazing_duration = "Baseline", Treatment = "CARM")
+
+gain.d.tgm <- read.table("./main/APEX1605_CO_TGM/CONUNN_TGM.DGZ", header = F, 
+                         skip = 10, col.names = name.dgz) %>%
+  mutate(INK=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`),
+         DM = GZWTkg * 0.026,
+         TDN=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`) * DTDN) %>% 
+  select(ID, Y, M, D, DWT, INK, TDN, DM) %>% 
+  group_by(ID, Y, M, D) %>% summarise(DWtG = mean(DWT), TN = sum(TDN),
+                                      DE = mean(DM),
+                                      INtK = sum(INK)) %>%
+  subset(Y %in% c(2014: 2018) & M %in% c(5: 9)) %>%
+  group_by(M, D) %>% summarise(DWG = mean(DWtG), TDN = mean(TN),
+                               DM = mean(DE),
+                               INK = mean(INtK)) %>%
+  mutate(Grazing_duration = "Baseline", Treatment = "TRM")
+
+gain.d <- rbind(gain.d.agm, gain.d.tgm) %>%
+  unite("Date", M, D, sep = "-", remove = T) 
+gain.d$Treatment[which(gain.d$Date == "9-30")] = NA
+gain.d$Treatment[which(gain.d$Date == "9-29")] = NA
+gain.d <- na.omit(gain.d)
+gain.d$Date <- as.Date(gain.d$Date, "%m-%d")
+
+plot.gain <- ggplot(gain.d) +
+  geom_line(aes(x = Date, y = DWG*4-2, lty = Treatment, color = "DWG")) +
+  geom_line(aes(x = Date, y =INK, lty = Treatment, color = "DMI")) +
+  geom_line(aes(x = Date, y =TDN, lty = Treatment, color = "TDN")) +
+  geom_line(aes(x = Date, y =DM, lty = Treatment, color = "Cattle demand")) +
+  # facet_grid(Y ~ .) +
+  ylab(expression(paste("Cattle demand/Dry matter intake/TDN intake (kg ", hd ^-1," ", day ^-1,")")))+
+  scale_color_simpsons() +
+  scale_y_continuous(limits = c(-2, 12), breaks = c(seq(0,12 ,3), 99),
+                     sec.axis = sec_axis(~(.+2)/4, 
+                                         name = expression(paste("                                                                    ","Daily weight gain (kg ", hd ^-1," ", day ^-1,")")),
+                                         breaks = seq(0, 1.6, 0.4)),
+                     expand = c(0, 0))+
+  scale_x_date(expand = c(0, 5), date_labels = "%b-%d") +
+  xlab("")+
+  theme_bw() +
+  theme(legend.position = "top")
+plot.gain
+
+
+
+####change figure. 6 input intake simulated data ####
+gain.d.agm <- read.table("./main/APEX1605_CO_AGM/CONUNN_AGM.DGZ", header = F, 
+                         skip = 10, col.names = name.dgz) %>%
+  mutate(INK=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`),
+         DM = GZWTkg * 0.026,
+         TDN=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`) * DTDN) %>% 
+  select(ID, Y, M, D, DWT, INK, TDN, DM) %>% 
+  group_by(ID, Y, M, D) %>% summarise(DWtG = mean(DWT), TN = sum(TDN),
+                                      DE = mean(DM),
+                                      INtK = sum(INK)) %>%
+  subset(Y %in% c(2014: 2018) & M %in% c(5: 9)) %>%
+  group_by(Y, M, D) %>% summarise(DWG = mean(DWtG), TDN = mean(TN),
+                               DM = mean(DE),
+                               INK = mean(INtK)) %>%
+  mutate(Grazing_duration = "Baseline", Treatment = "CARM")
+
+gain.d.tgm <- read.table("./main/APEX1605_CO_TGM/CONUNN_TGM.DGZ", header = F, 
+                         skip = 10, col.names = name.dgz) %>%
+  mutate(INK=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`),
+         DM = GZWTkg * 0.026,
+         TDN=`RSTKha.hd` * (`GZSDkg.ha` +`GZSLkg.ha`) * DTDN) %>% 
+  select(ID, Y, M, D, DWT, INK, TDN, DM) %>% 
+  group_by(ID, Y, M, D) %>% summarise(DWtG = mean(DWT), TN = sum(TDN),
+                                      DE = mean(DM),
+                                      INtK = sum(INK)) %>%
+  subset(Y %in% c(2014: 2018) & M %in% c(5: 9)) %>%
+  group_by(Y, M, D) %>% summarise(DWG = mean(DWtG), TDN = mean(TN),
+                               DM = mean(DE),
+                               INK = mean(INtK)) %>%
+  mutate(Grazing_duration = "Baseline", Treatment = "TRM")
+
+gain.d <- rbind(gain.d.agm, gain.d.tgm) %>%
+  unite("Date", M, D, sep = "-", remove = T) 
+gain.d$Treatment[which(gain.d$Date == "9-30")] = NA
+gain.d$Treatment[which(gain.d$Date == "9-29")] = NA
+gain.d <- na.omit(gain.d)
+gain.d$Date <- as.Date(gain.d$Date, "%m-%d")
+
+plot.gain <- ggplot(gain.d) +
+  # geom_line(aes(x = Date, y = DWG*4-2, lty = Treatment, color = "DWG")) +
+  geom_line(aes(x = Date, y = DWG, lty = Treatment, color = "DWG")) +
+  geom_line(aes(x = Date, y =INK, lty = Treatment, color = "DMI")) +
+  geom_line(aes(x = Date, y =TDN, lty = Treatment, color = "TDN")) +
+  # geom_line(aes(x = Date, y =DM, lty = Treatment, color = "Cattle demand")) +
+  facet_grid(Y ~ .) +
+  ylab(expression(paste("Dry matter intake/TDN intake/Daily weight gain (kg ", hd ^-1," ", day ^-1,")")))+
+  scale_color_simpsons() +
+  scale_y_continuous(limits = c(-1, 14), breaks = c(seq(0,12 ,3), 99),
+                     expand = c(0, 0))+
+  # scale_y_continuous(limits = c(-2, 12), breaks = c(seq(0,12 ,3), 99),
+  #                    sec.axis = sec_axis(~(.+2)/4, 
+  #                                        name = expression(paste("                                                                    ","Daily weight gain (kg ", hd ^-1," ", day ^-1,")")),
+  #                                        breaks = seq(0, 1.6, 0.4)),
+  #                    expand = c(0, 0))+
+  scale_x_date(expand = c(0, 1), date_labels = "%b") +
+  xlab("")+
+  theme_bw() +
+  theme(panel.spacing = unit(0.1, "lines"),
+        legend.position = "top")
+plot.gain
+
+
+# gain.d.d <- data.frame()
+# for (i in 1:2){
+#   path <- paste0(getwd(), '/Expand/Duration/APEX1605_CO_AGM', i, 
+#                  'wk/CONUNN_AGM.DGZ')
+#   Di <- paste0(i * 7, ' days')
+#   AUTO <- fread(path, header = F, skip = 10, col.names = name.dgz)%>%
+#     select(ID, Y, M, D, DWT) %>% 
+#     subset(Y %in% c(2014: 2018) & M %in% c(5: 9)) %>%
+#     group_by(M, D) %>% summarise(DWtG = mean(DWT)) %>%
+#     mutate(Grazing_duration = Di, Treatment = "CARM")
+#   gain.d.d <- rbind(gain.d.d, AUTO)
+# }
+# 
+# gain.d <- rbind(gain.d.agm, gain.d.d) %>%
+#   unite("Date", M, D, sep = "-", remove = T)
+# gain.d$Date <- as.Date(gain.d$Date, "%m-%d")
+
+
+set.seed(1)
+gain.d <- within(gain.d, 
+                 Grazing_duration <- factor(Grazing_duration,
+                                            levels = c("Baseline",
+                                                       "7 days",
+                                                       "14 days")))
+with(gain.d,levels(Grazing_duration))
+
+plot.gain.duration <- ggplot(gain.d, aes(x = Date, y = DWtG, color = Grazing_duration)) +
+  geom_line() +
+  # facet_grid(Y ~ .) +
+  ylab(expression(paste("Cattle weight gain (kg ", hd ^-1," ", day ^-1,")")))+
+  scale_color_simpsons() +
+  scale_x_date(expand = c(0, 5)) +
+  theme_bw() +
+  theme(legend.position = "top")
+plot.gain.duration
