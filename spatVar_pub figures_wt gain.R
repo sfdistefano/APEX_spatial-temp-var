@@ -86,7 +86,7 @@ ggplot_grazing_yearly <- ggplot(grazing_weight_data_yearly, aes(x = factor(Year)
        y = "Mean Daily Weight Gain (kg/head/day)", 
        fill = "Data Source") +  # Labels and legend title
   theme_bw() +   # Clean theme
-  scale_fill_brewer(palette = "Set3") +
+  scale_fill_npg() +
   theme(text = element_text(size = 15, family = 'serif'))
 
 # Print the combined plot

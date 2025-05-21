@@ -1,0 +1,23 @@
+data_path <- "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.sad"
+biom_data <- fread(data_path, fill = TRUE, skip = 9, header = TRUE) %>%
+  select(Y, M, D, ID, CPNM, HUI, WS, TS, STL) %>%
+  mutate(Date = ymd(paste(Y,M,D, sep = "-")))
+
+pasture15E <- biom_data %>% filter(ID == 1)
+
+ggplot(pasture15E, aes(x = Date, color = CPNM)) +
+  # geom_line(aes(y = WS)) +
+  geom_line(aes(y = STL)) +
+  facet_wrap(~Y, scale = "free_x")
+
+ggplot(pasture15E, aes(x = Date, y = HUI, color = CPNM)) +
+  geom_line() +
+  facet_wrap(~Y, scale = "free_x")
+
+
+ggplot(pasture15E, aes(x = Date, y = HUI, color = CPNM)) +
+  geom_line() +
+  facet_wrap(~Y, scale = "free_x")
+
+file_path <- "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.DGZ"
+dgz_data <- data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE)

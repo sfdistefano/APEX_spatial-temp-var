@@ -1,0 +1,16 @@
+file_path <- "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.DGZ"
+
+test <- data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE)
+
+test_trm <- test %>% filter(HERD %in% c(1:10)) %>%
+  select(Y, M, D, HERD, FORG, TDNF) %>%
+  mutate(Date = ymd(paste(Y, M, D, sep = "-")))
+
+
+pasture15E <- test_trm %>% filter(HERD == 1) 
+
+# write.csv(pasture15E, "C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 weight gain/pasture15E_TDN.csv")
+
+ggplot(pasture15E, aes(x = Date, y = TDNF, color = FORG)) +
+  geom_line() +
+  facet_wrap(~Y, scales = "free_x")

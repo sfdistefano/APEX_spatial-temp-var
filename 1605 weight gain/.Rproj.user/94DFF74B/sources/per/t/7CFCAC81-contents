@@ -1,0 +1,93 @@
+library(tidyverse)
+library(reshape2)
+library(data.table)
+library(ggsci)
+library(hydroGOF)
+
+##### ANNUAL GRAZING FILE (.AGZ) ###############################################
+
+# Importing reference information for pastures
+PastureID_92sa <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
+PastureID_20sa <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
+
+## Importing observed annual mean weight gain data
+observed_weight_data <- read.csv("C:/APEX data and scripts/Data/CPER Cattle/CARM_Cattle Weight Gains_2014-2023_SD.csv") %>%
+  mutate(gain = ADG / 2.2046) %>%  # Converting from lbs to kg
+  merge(PastureID_20sa, by = 'Pasture', 
+        relationship = "many-to-many", all.x = TRUE) %>%
+  mutate(Treatment = ifelse(ID %in% c(1:10), "TRM", "CARM"))
+
+# Summarizing observed data for each treatment type
+observed_weight_data_filtered <- observed_weight_data %>%
+  select(Year, Treatment, gain) %>%
+  filter(Year %in% c(2014:2018)) %>%
+  group_by(Year, Treatment) %>%
+  summarize(MeanWT = mean(gain, na.rm = TRUE), 
+            SD = sd(gain), 
+            Type = "Measured", .groups = 'drop')
+
+### Function to read and process simulated data by grazing treatment
+prepare_weight_data_agz <- function(file_path, years, id_filter, 
+                                    sim_type, Pasture_data) {
+  data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE) %>%
+    filter(YR %in% years, ID %in% id_filter) %>%
+    left_join(Pasture_data, by = "ID") %>%
+    group_by(YR, Treatment) %>%
+    summarize(MeanWT = mean(WTGkg.hd.d, na.rm = TRUE)) %>%
+    mutate(Type = sim_type, SD = 0) %>%
+    rename(Year = YR)
+}
+## Importing simulated data using the reusable function
+years <- c(2014:2018)
+
+# Baseline simulation scenario
+grazing_weight_data_noVar_yearly <- prepare_weight_data_agz(
+  "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ",
+  years, 1:20, Pasture_data = PastureID_20sa,
+  "Simulated: no variability"
+)
+
+# Spatial variability simulation scenario
+grazing_weight_data_spatVar_yearly <- prepare_weight_data_agz(
+  "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div/WtGain_Simulation/APEX1605_CO_all92/CONUNN_TGM.AGZ",
+  years, 1:92, Pasture_data = PastureID_92sa,
+  "Simulated: spatial variability"
+)
+
+# Spatial + temporal variability simulation scenario
+# grazing_weight_data_spatTempVar_yearly <- prepare_weight_data_agz(
+#   "C:/02-APEX1605_spatialtemp/APEX1605_CO_92 subareas_div_dyn plant pop/WtGain_Simulation/APEX1605_CO_all92/CONUNN_TGM.AGZ",
+#   years, 1:92, Pasture_data = PastureID,
+# "Simulated: spatial + temporal variability"
+# )
+
+## Combining all grazing observed and simulated data
+grazing_weight_data_yearly <- rbind(
+  observed_weight_data_filtered, grazing_weight_data_noVar_yearly, 
+  grazing_weight_data_spatVar_yearly#, grazing_weight_data_spatTempVar_yearly
+)
+
+# Reorder the levels of the Type column
+grazing_weight_data_yearly$Type <- factor(grazing_weight_data_yearly$Type, 
+                                          levels = c("Measured", 
+                                                     "Simulated: no variability", 
+                                                     "Simulated: spatial variability"#, 
+                                                     #"Simulated: spatial + temporal variability"
+                                          ))
+
+# Create a bar plot with error bars
+# Create combined ggplot for TRM and CARM
+ggplot_grazing_yearly <- ggplot(grazing_weight_data_yearly, aes(x = factor(Year), y = MeanWT, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +  # Bars for mean weight
+  geom_errorbar(aes(ymin = MeanWT - SD, ymax = MeanWT + SD), 
+                position = position_dodge(width = 0.9), width = 0.25) +  # Error bars
+  facet_wrap(~ Treatment) +  # Facet by Treatment (TRM and CARM)
+  labs(x = "Year", 
+       y = "Mean Daily Weight Gain (kg/head/day)", 
+       fill = "Data Source") +  # Labels and legend title
+  theme_bw() +   # Clean theme
+  scale_fill_npg() +
+  theme(text = element_text(size = 15, family = 'serif'))
+
+# Print the combined plot
+print(ggplot_grazing_yearly)

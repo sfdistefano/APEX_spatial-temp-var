@@ -1,0 +1,9 @@
+file_path <- "C:/01-APEX1605_CO_baseline/WtGain_Simulation/APEX1605_CO_all20/CONUNN_TGM.AGZ"
+
+test <- data.table::fread(file_path, fill = TRUE, skip = 8, header = TRUE, check.names = TRUE) %>%
+  filter(YR %in% years) %>%
+  mutate(Treatment = ifelse(HERD %in% c(1:10), "TRM", "CARM"))
+
+test_intake <- test %>%
+  mutate(cpnm_intake = GZSLkg.ha + GZSDkg.ha) %>%
+  select(YR, Treatment, HERD, ID, CPNM, cpnm_intake) 

@@ -1,0 +1,41 @@
+library(dplyr)
+
+test_intake <- test %>%
+  mutate(cpnm_intake = GZSLkg.ha + GZSDkg.ha) %>%
+  select(YR, Treatment, HERD, ID, CPNM, cpnm_intake) 
+
+test_intake_TRM <- test_intake %>%
+  filter(Treatment == "TRM") %>%
+  group_by(YR, Treatment, CPNM) %>%
+  summarize(cpnm_intake_trt = round(mean(cpnm_intake), 2)) %>%
+  group_by(YR, Treatment) %>%
+  mutate(total_intake = sum(cpnm_intake_trt),
+         cpnm_percentage = round((cpnm_intake_trt / total_intake) * 100, 2))
+
+test_intake_CARM <- test_intake %>%
+  filter(Treatment == "CARM") %>%
+  group_by(YR, Treatment, CPNM)  %>%
+  summarize(cpnm_intake_trt = sum(cpnm_intake)) %>%
+  group_by(YR, Treatment) %>%
+  mutate(total_intake = sum(cpnm_intake_trt),
+         cpnm_percentage = round((cpnm_intake_trt / total_intake) * 100, 2))
+
+
+test_intake_trt <- rbind(test_intake_TRM, test_intake_CARM)
+
+ggplot(test_intake_trt, aes(x = Treatment, y = cpnm_percentage, fill = CPNM)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_grid(. ~ YR, scales = "free_x", space = "free_x") +  # Year facets side-by-side in one row
+  labs(x = "Treatment", y = "Percentage of Diet (%)", fill = "Plant Group") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 15, family = "serif"),
+    strip.text.y = element_blank(),  # Remove unused row labels
+    strip.text.x = element_text(size = 15, face = "bold"),  # Year labels at the top
+    axis.text.x = element_text(size = 15, face = "bold")  # Treatment labels at the bottom
+  ) +
+  scale_fill_npg()
+
+
+

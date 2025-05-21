@@ -66,6 +66,6 @@ biomass_plot <- ggplot(SimBiom, aes(x = Date, y = total_biom,
 # Save the plot as a PNG file in portrait mode
 setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 biomass")
 
-ggsave(filename = "total_biomass_plot.png", 
-       plot = biomass_plot, 
-       width = 10, height = 11, units = "in", dpi = 300)
+# ggsave(filename = "total_biomass_plot.png", 
+#        plot = biomass_plot, 
+#        width = 10, height = 11, units = "in", dpi = 300)
