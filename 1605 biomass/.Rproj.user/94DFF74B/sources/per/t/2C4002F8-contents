@@ -131,7 +131,10 @@ observed_data_v02 <- observed_data %>%
                        "TGM" = "TRM",
                        "AGM" = "CARM"),
     Pasture = ifelse(Pasture == "NH", "10S", Pasture)
-  )
+  ) %>%
+  # remove prescribed burn plots
+  filter(!(Pasture == "19N" & Plot %in% c(5:6))) %>%
+  filter(!(Pasture == "18S" & Plot %in% c(5:6)))
 
 # Adding pasture information by merging with PastureID_sa92
 # - Merge observed data with metadata to add pasture information

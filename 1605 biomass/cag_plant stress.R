@@ -3,6 +3,7 @@ library(tidyverse)
 library(data.table)
 library(lubridate)
 library(patchwork)
+library(emmeans)
 
 ####### PANEL A: Monthly Precipitation #######
 
@@ -115,6 +116,7 @@ spatial_TS_CPNM <- summarize_stress_cpnm(spatial, "TS") %>% mutate(Sim.Type = "S
 noVar_TS_CPNM <- summarize_stress_cpnm(no_variability, "TS") %>% mutate(Sim.Type = "No Variability")
 combined_TS_CPNM <- bind_rows(spatial_TS_CPNM, noVar_TS_CPNM) %>%
   filter(month_day >= as.Date("2000-05-01") & month_day <= as.Date("2000-10-31"))
+
 model_ws <- lm(cpnm_stress_daily ~ Sim.Type * CPNM + Y, data = combined_WS_CPNM)
 model_ts <- lm(cpnm_stress_daily ~ Sim.Type * CPNM + Y, data = combined_TS_CPNM)
 
@@ -159,5 +161,5 @@ final_plot
 
 ####### Export Figure #######
 
-ggsave("Figure_Climate_Stress.tiff", plot = final_plot,
-       width = 16, height = 16, dpi = 300, compression = "lzw")
+#ggsave("Figure_Climate_Stress.tiff", plot = final_plot,
+#       width = 16, height = 16, dpi = 300, compression = "lzw")
