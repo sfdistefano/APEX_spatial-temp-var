@@ -254,190 +254,213 @@ combined_plot
 
 # Save the combined plot
 setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 biomass")
-# ggsave(filename = "combined_accBiomass_plots.png", 
-#        plot = combined_plot, 
+
+# ggsave(filename = "combined_accBiomass_plots.png",
+#        plot = combined_plot,
 #        width = 20, height = 12)
 
+###### PREP DATA FOR ANALYSIS ##################################################
+### Select the relevant data from the 'biomass_spatial' dataset and process it
+## Data at plot level
+biomass_spatial_Aug12_plot <- biomass_spatial %>%
+  # Group the data by specific columns to prepare for cumulative calculations
+  group_by(Treatment, ID, CPNM, Y) %>%
+  # Arrange the grouped data by date
+  arrange(Date) %>%
+  # Calculate the cumulative sum of biomass (DDMkg_ha) for each group
+  mutate(cumulative_DDMkg_ha = cumsum(DDMkg_ha)) %>%
+  # Remove the grouping structure to return to a regular data frame
+  ungroup() %>%
+  # Filter the data to include only observations from August 12
+  filter(month(Date) == 8, day(Date) == 12) %>%
+  # Further filter to include only specific categories of CPNM
+  filter(CPNM %in% c("CSPG", "WSPG", "FRB3", "VUOC")) %>%
+  # Recode values in the CPNM column to new categories for clarity
+  mutate(CPNM = recode(CPNM,
+                       "VUOC" = "CSAG",
+                       "FRB3" = "FORB"))
+## Data at pasture level
+biomass_spatial_Aug12 <- biomass_spatial_Aug12_plot %>%
+  # summarize to pasture-scale
+  group_by(Date, Treatment, Pasture, CPNM, Y) %>%
+  summarize(biomass_pasture = round(mean(cumulative_DDMkg_ha), 2)) %>%
+  # Recode values in the CPNM column to new categories for clarity
+  mutate(CPNM = recode(CPNM,
+                       "VUOC" = "CSAG",
+                       "FRB3" = "FORB")) %>%
+  mutate(Sim.Type = "Spatial Variability")
+
+### Data from baseline scenario
+biomass_noVar_Aug12 <- biomass_no_variability %>%
+  # Group the data by specific columns to prepare for cumulative calculations
+  group_by(Treatment, Pasture, CPNM, Y) %>%
+  # Arrange the grouped data by date
+  arrange(Date) %>%
+  # Calculate the cumulative sum of biomass (DDMkg_ha) for each group
+  mutate(biomass_pasture = cumsum(DDMkg_ha)) %>%
+  # Remove the grouping structure to return to a regular data frame
+  ungroup() %>%
+  # Filter the data to include only observations from August 12
+  filter(month(Date) == 8, day(Date) == 12) %>%
+  # Further filter to include only specific categories of CPNM
+  filter(CPNM %in% c("CSPG", "WSPG", "FRB3", "VUOC")) %>%
+  # Recode values in the CPNM column to new categories for clarity
+  mutate(CPNM = recode(CPNM,
+                       "VUOC" = "CSAG",
+                       "FRB3" = "FORB")) %>%
+  # Select only necessary columns to combine with spatial var. dataset
+  select(Date, Treatment, Pasture, CPNM, Y, biomass_pasture) %>%
+  mutate(Sim.Type = "No Variability")
+
+## Combine both datasets
+biomass_simulated_Aug12 <- rbind(biomass_noVar_Aug12, biomass_spatial_Aug12) %>%
+  mutate(Y = as.integer(Y))
+
+## Prepare data for comparison
+biomass_observed_plot <- observed_data %>%
+  # Filter the observed data for specific categories and year constraints
+  filter(APEXcodeFG %in% c("CSPG", "WSPG", "FORB", "CSAG"),
+         Year <= 2018) %>%
+  # Recode Treatment column to align categories with the biomass data
+  mutate(Treatment = recode(Treatment,
+                            "TGM" = "TRM",
+                            "AGM" = "CARM"),
+         # Recode Pasture column for consistent naming
+         Pasture = recode(Pasture,
+                          "NH" = "10S")) %>%
+  rename(CPNM = APEXcodeFG,
+         Y = Year) %>%
+  # remove prescribed burn plots
+  filter(!(Pasture == "19N" & Plot %in% c(5:6))) %>%
+  filter(!(Pasture == "18S" & Plot %in% c(5:6)))
+
+# Summarize at pasture-scale
+biomass_observed_pasture <- biomass_observed_plot %>%
+  group_by(Date, Treatment, Pasture, CPNM, Y) %>%
+  summarize(biomass_pasture = round(mean(MeankgPerHa_plot), 2),
+            uncertainty = round((sd(MeankgPerHa_plot)/mean(MeankgPerHa_plot)) * 100, 2))
+
+######### FUNCTION FOR HARMEL'S MODIFICATION STATISTICS ########################
+# Function for GOF stats with Modification 2
+compute_mod2_stats <- function(df) {
+  df <- df %>%
+    mutate(
+      # Assign a small default (e.g., 1) when uncertainty is NA or zero
+      # Happens when observed values are 0 with no variability (i.e., no uncertainty)
+      uncertainty = ifelse(is.na(uncertainty) | uncertainty <= 0, 1, uncertainty)
+    )
+  
+  prob <- pnorm(df$simulated, mean = df$observed, sd = df$uncertainty)
+  prob_adj <- ifelse(prob > 0.5, 1 - prob, prob)
+  CF <- 1 - 2 * prob_adj
+  eu2i <- CF * 0.5 * abs(df$observed - df$simulated)
+  
+  NSE_mod2 <- 1 - sum(eu2i^2) / sum((df$observed - mean(df$observed))^2)
+  d_mod2 <- 1 - sum(eu2i^2) / sum((abs(df$simulated - mean(df$observed)) + abs(df$observed - mean(df$observed)))^2)
+  RMSE_mod2 <- sqrt(mean(eu2i^2))
+  MAE_mod2 <- mean(abs(eu2i))
+  
+  data.frame(
+    NSE_mod2 = NSE_mod2,
+    d_mod2 = d_mod2,
+    RMSE_mod2 = RMSE_mod2,
+    MAE_mod2 = MAE_mod2
+  )
+}
+##### PASTURE LEVEL STATISTICS #################################################
+# Prepare the simulated data
+sim_data_clean <- biomass_simulated_Aug12 %>%
+  rename(simulated = biomass_pasture) %>%
+  select(Date, Y, Treatment, Pasture, CPNM, Sim.Type, simulated)
+
+# Prepare the observed data
+obs_data_clean <- biomass_observed_pasture %>%
+  rename(observed = biomass_pasture) %>%
+  select(Date, Y, Treatment, Pasture, CPNM, observed, uncertainty)
+
+# Join simulated and observed data on shared keys
+comparison_df <- merge(
+  sim_data_clean,
+  obs_data_clean,
+  by = c("Date", "Y", "Treatment", "Pasture", "CPNM")
+)
 
 
-# Save the combined plot
-# setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 biomass")
-# ggsave(filename = "combined_biomass_plots.png", plot = combined_plot, width = 16, height = 12)
+# Compute GOF metrics for each Sim.Type and CPNM
+mod2_summary <- comparison_df %>%
+  group_by(Sim.Type, CPNM) %>%
+  group_modify(~ compute_mod2_stats(.x)) %>%
+  ungroup()
 
-###### VISUALIZING DIFFERENCES BY ECOLOGICAL SITE ##############################
-# Define a function to summarize biomass data by ecological site
-# - Summarizes cumulative biomass within each ecological site
-# summarize_biomass_ecosite <- function(data) {
-#   data %>%
-#     group_by(Treatment, Ecosite, ID, CPNM, Y) %>%
-#     arrange(Date) %>%
-#     mutate(
-#       cumulative_DDMkg_ha = cumsum(DDMkg_ha),
-#       month_day = format(Date, "%m-%d")
-#     ) %>%
-#     ungroup() %>%
-#     group_by(Date, Treatment, Ecosite, CPNM, Y, month_day) %>%
-#     summarize(
-#       mean_DDMkg_ha_ecosite = mean(cumulative_DDMkg_ha, na.rm = TRUE),
-#       sd_DDMkg_ha_ecosite = sd(cumulative_DDMkg_ha, na.rm = TRUE),
-#       .groups = "drop"
-#     ) %>%
-#     filter(!CPNM %in% c("ATCA", "SSHB"))
-# }
-# 
-# # # Summarize biomass by ecological site
-# biomass_summary_ecosite <- summarize_biomass_ecosite(biomass_spatial)
-# 
-# # Calculate 1 standard deviation within each Treatment across ecosites
-# observed_data_v04_ecosite <- observed_data_v03 %>%
-#   group_by(Year, Date, Treatment, Ecosite, APEXcodeFG) %>%
-#   summarize(MeankgPerHa_ecosite = mean(MeankgPerHa_plot),
-#             SDkgPerHa_ecosite = sd(MeankgPerHa_plot, na.rm = TRUE),
-#             .groups = 'drop') %>%
-#   filter(Year <= 2018) %>%
-#   mutate(month_day = format(Date, "%m-%d"),
-#          Y = as.character(Year)) %>%
-#   rename(CPNM = APEXcodeFG)
-# 
-# # # Filter out specific plant communities for ecosite analysis
-# observed_data_filtered_ecosite <- observed_data_v04_ecosite %>%
-#   filter(!CPNM %in% c("ATCA", "SSHB"))
-# 
-# # Define a function to create plots for biomass by ecological site
-# create_biomass_plot_by_ecosite <- function(biomass_data, observed_data, ecosite_type) {
-#   ggplot(
-#     biomass_data %>%
-#       filter(Ecosite == ecosite_type) %>%
-#       mutate(CPNM = factor(CPNM, levels = c("CSPG", "WSPG", "FRB3", "VUOC"))),
-#     aes(x = month_day, y = mean_DDMkg_ha_ecosite,
-#         color = Treatment, group = Treatment)
-#   ) +
-#     geom_ribbon(
-#       aes(ymin = pmax(mean_DDMkg_ha_ecosite - sd_DDMkg_ha_ecosite, 0),
-#           ymax = mean_DDMkg_ha_ecosite + sd_DDMkg_ha_ecosite,
-#           fill = Treatment),
-#       alpha = 0.2
-#     ) +
-#     geom_line(size = 1) +
-#     geom_point(
-#       data = observed_data %>%
-#         filter(Ecosite == ecosite_type) %>%
-#         mutate(CPNM = factor(CPNM, levels = c("CSPG", "WSPG", "FRB3", "VUOC"))),
-#       aes(x = month_day, y = MeankgPerHa_ecosite,
-#           color = Treatment, shape = Treatment),
-#       size = 4, alpha = 1, stroke = 1.2, fill = NA
-#     ) +
-#     scale_shape_manual(values = 1:2) +
-#     scale_color_npg() +
-#     scale_fill_npg() +
-#     geom_errorbar(
-#       data = observed_data %>%
-#         filter(Ecosite == ecosite_type) %>%
-#         mutate(CPNM = factor(CPNM, levels = c("CSPG", "WSPG", "FRB3", "VUOC"))),
-#       aes(x = month_day, y = MeankgPerHa_ecosite,
-#           ymin = MeankgPerHa_ecosite - SDkgPerHa_ecosite,
-#           ymax = MeankgPerHa_ecosite + SDkgPerHa_ecosite),
-#       linewidth = 0.7
-#     ) +
-#     facet_grid(CPNM ~ Y, scales = "free_y",
-#                labeller = labeller(CPNM = as_labeller(c(FRB3 = "FORB", CSPG = "CSPG", WSPG = "WSPG", VUOC = "VUOC")))) +
-#     scale_x_discrete(
-#       breaks = c("01-01", "03-01", "05-01", "07-01", "09-01", "11-01"),
-#       labels = c("Jan", "Mar", "May", "Jul", "Sep", "Nov")
-#     ) +
-#     labs(
-#       title = paste("Ecological Site", ":", ecosite_type),
-#       x = "Month-Day",
-#       y = "Accumulated Biomass (kg/ha)",
-#       color = "Grazing Treatment",
-#       fill = "Grazing Treatment",
-#       shape = "Grazing Treatment"
-#     ) +
-#     theme_minimal(base_family = "serif") +
-#     theme(
-#       strip.text = element_text(size = 12, face = "bold", family = "serif"),
-#       axis.text.x = element_text(angle = 45, hjust = 1, family = "serif", size = 12),
-#       axis.text.y = element_text(family = "serif", size = 12),
-#       axis.title = element_text(family = "serif", size = 14),
-#       legend.text = element_text(family = "serif", size = 12),
-#       legend.title = element_text(family = "serif", size = 14),
-#       plot.title = element_text(size = 16, face = "bold", family = "serif", hjust = 0.5),
-#       legend.position = if (ecosite_type %in% c("Sandy", "Loamy")) "none" else "bottom"
-#     )
-# }
-# 
-# # Generate plots for specific ecological sites
-# # - Create biomass accumulation plots for Sandy, Loamy, and Salt Flats sites
-# plot_sandy <- create_biomass_plot_by_ecosite(biomass_summary_ecosite,
-#                                              observed_data_filtered_ecosite,
-#                                              "Sandy")
-# plot_loamy <- create_biomass_plot_by_ecosite(biomass_summary_ecosite,
-#                                              observed_data_filtered_ecosite,
-#                                              "Loamy")
-# plot_salt_flats <- create_biomass_plot_by_ecosite(biomass_summary_ecosite,
-#                                                   observed_data_filtered_ecosite,
-#                                                   "Salt Flats")
-# 
-# # Display or save plots
-# # - Plot results for different ecological sites to visualize biomass trends
-# # plot_sandy
-# # plot_loamy
-# # plot_salt_flats
-# 
-# combined_plot_ecosite <- plot_sandy / plot_loamy / plot_salt_flats
-# 
-# combined_plot_ecosite
-#
-# # Save the combined plot
-# setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 biomass")
-# ggsave(filename = "combined_biomass_plots_ecosite.png", plot = combined_plot_ecosite, width = 15, height = 30)
+# Print results
+print(mod2_summary)
 
-##### COMPARING DATA BY PLOT FOR EXTERNAL ANALYSIS #############################
-# Select the relevant data from the 'biomass_spatial' dataset and process it
-# biomass_spatial_Aug12 <- biomass_spatial %>%
-#   # Group the data by specific columns to prepare for cumulative calculations
-#   group_by(Treatment, ID, CPNM, Y) %>%
-#   # Arrange the grouped data by date
-#   arrange(Date) %>%
-#   # Calculate the cumulative sum of biomass (DDMkg_ha) for each group
-#   mutate(cumulative_DDMkg_ha = cumsum(DDMkg_ha)) %>%
-#   # Remove the grouping structure to return to a regular data frame
+####################### PASTURE STATS VISUALIZATION ############################
+#---- 1. Compute delta metrics from mod2_summary ----#
+delta_df <- mod2_summary %>%
+  pivot_wider(
+    names_from = Sim.Type,
+    values_from = c(NSE_mod2, d_mod2, RMSE_mod2, MAE_mod2),
+    names_sep = "."
+  ) %>%
+  mutate(
+    delta_NSE  = `NSE_mod2.Spatial Variability` - `NSE_mod2.No Variability`,
+    delta_d    = `d_mod2.Spatial Variability` - `d_mod2.No Variability`,
+    delta_RMSE = `RMSE_mod2.Spatial Variability` - `RMSE_mod2.No Variability`,
+    delta_MAE  = `MAE_mod2.Spatial Variability`  - `MAE_mod2.No Variability`
+  )
+
+#---- 2. Generic plotting function ----#
+plot_delta <- function(df, delta_col, y_label) {
+  ggplot(df, aes(x = CPNM, y = .data[[delta_col]], 
+                 fill = .data[[delta_col]] > 0)) +
+    geom_bar(stat = "identity", width = 0.6) +
+    scale_fill_manual(values = c("TRUE" = "forestgreen", 
+                                 "FALSE" = "firebrick"), guide = FALSE) +
+    labs(y = y_label, x = "CPNM") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+    theme_minimal(base_size = 15) +
+    theme(text = element_text(family = "serif"))
+}
+
+#---- 3. Generate all delta plots ----#
+p1 <- plot_delta(delta_df, "delta_NSE",  "∆ NSE") + labs(x = NULL)
+p2 <- plot_delta(delta_df, "delta_d",    "∆ d") + labs(x = NULL)
+p3 <- plot_delta(delta_df, "delta_RMSE", "∆ RMSE")
+p4 <- plot_delta(delta_df, "delta_MAE",  "∆ MAE")
+
+#---- 4. Combine into grid ----#
+(p1 | p2) / (p3 | p4) + plot_layout(heights = c(1, 1.05))
+
+# Save output
+# ggsave("delta_gof_metrics.png", width = 12, height = 8, dpi = 300)
+
+##### PLOT LEVEL STATISTICS ####################################################
+# # Prepare simulated data
+# sim_plot_clean <- biomass_spatial_Aug12_plot %>%
+#   rename(simulated = cumulative_DDMkg_ha) %>%
+#   mutate(Y = as.integer(Y)) %>%
+#   select(Date, Y, Treatment, Pasture, Plot, CPNM, simulated)
+# 
+# # Prepare observed data
+# obs_plot_clean <- biomass_observed_plot %>%
+#   rename(observed = MeankgPerHa_plot) %>%
+#   select(Date, Y, Treatment, Pasture, Plot, CPNM, observed, uncertainty) %>%
+#   mutate(Y = as.integer(Y))
+# 
+# # Join simulated and observed
+# comparison_plot_df <- merge(
+#   sim_plot_clean,
+#   obs_plot_clean,
+#   by = c("Date", "Y", "Treatment", "Pasture", "Plot", "CPNM")
+# )
+# 
+# # Compute stats by CPNM (only one Sim.Type at this scale)
+# mod2_plot_summary <- comparison_plot_df %>%
+#   group_by(CPNM) %>%
+#   group_modify(~ compute_mod2_stats(.x)) %>%
 #   ungroup() %>%
-#   # Filter the data to include only observations from August 12
-#   filter(month(Date) == 8, day(Date) == 12) %>%
-#   # Further filter to include only specific categories of CPNM
-#   filter(CPNM %in% c("CSPG", "WSPG", "FRB3", "VUOC")) %>%
-#   # Recode values in the CPNM column to new categories for clarity
-#   mutate(CPNM = recode(CPNM,
-#                        "VUOC" = "CSAG",
-#                        "FRB3" = "FORB"))
-#
-# # Process observed data for comparison
-# observed_data_herb <- observed_data %>%
-#   # Filter the observed data for specific categories and year constraints
-#   filter(APEXcodeFG %in% c("CSPG", "WSPG", "FORB", "CSAG"),
-#          Year <= 2018) %>%
-#   # Recode Treatment column to align categories with the biomass data
-#   mutate(Treatment = recode(Treatment,
-#                             "TGM" = "TRM",
-#                             "AGM" = "CARM"),
-#          # Recode Pasture column for consistent naming
-#          Pasture = recode(Pasture,
-#                           "NH" = "10S"))
-#
-# # Merge the processed biomass and observed datasets
-# results_compare <- merge(biomass_spatial_Aug12, observed_data_herb,
-#                          # Match on specific columns to combine datasets
-#                          by.x = c("Date", "Treatment", "Pasture", "Plot", "CPNM"),
-#                          by.y = c("Date", "Treatment", "Pasture", "Plot", "APEXcodeFG"),
-#                          # Retain all rows from the biomass data
-#                          all.x = TRUE) %>%
-#   # Select relevant columns for the final comparison table
-#   select(Year, Date, Treatment, Pasture, Plot, CPNM,
-#          cumulative_DDMkg_ha, MeankgPerHa_plot, uncertainty) %>%
-#   # Rename columns for clarity in the final output
-#   rename(Predicted = cumulative_DDMkg_ha,
-#          Observed = MeankgPerHa_plot)
-
-# Export the comparison results to a CSV file for external analysis
-# write.csv(results_compare, "APEX_results_comparison_pred_v_obs.csv")
+#   mutate(Sim.Type = "Spatial Variability (Plot)")
+# 
+# # Output results
+# print(mod2_plot_summary)
