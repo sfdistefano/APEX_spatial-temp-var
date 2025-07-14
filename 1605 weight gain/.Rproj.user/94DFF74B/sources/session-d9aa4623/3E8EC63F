@@ -1,0 +1,27 @@
+{
+    "id": "3E8EC63F",
+    "path": "~/GitHub/APEX_spatial-temp-var/plant population_APEX1605.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1749353068",
+    "contents": "",
+    "dirty": false,
+    "created": 1752507567887.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "106,99",
+        "scrollLine": "82"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1752507584,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1752507584701,
+    "read_only": false,
+    "read_only_alternatives": []
+}

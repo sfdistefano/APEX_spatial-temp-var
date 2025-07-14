@@ -3,6 +3,7 @@ library(tidyverse)   # Includes functions for data wrangling, manipulation, and 
 library(data.table)  # Fast data manipulation tools
 library(ggsci)       # Provides scientific journal color palettes for ggplot
 library(patchwork)
+library(emmeans)
 
 # Import pasture metadata
 # - Read in CSV files containing metadata for pastures, which include IDs and ecological site information
@@ -173,10 +174,10 @@ biomass_summary <- rbind(biomass_summary_no_var, biomass_summary_spatial)
 
 # Create a named vector to map group codes to full names
 group_names <- c(
-  CSPG = "Cool Season Perennial-Grass",
-  WSPG = "Warm Season Perennial-Grass",
-  FRB3 = "Forb",  
-  VUOC = "Six Weeks Fescue"
+  CSPG = "CSPG",
+  WSPG = "WSPG",
+  FRB3 = "FORB",  
+  VUOC = "CSAG"
 )
 
 # Initialize an empty list to store plots
@@ -233,6 +234,12 @@ for (group in plant_functional_groups) {
       plot.title = element_text(size = 16, face = "bold", family = "serif", hjust = 0.5),
       legend.position = "bottom"
     )
+  # Conditional ylim
+  if (group %in% c("CSPG", "WSPG")) {
+    plot <- plot + coord_cartesian(ylim = c(0, 1250))
+  } else {
+    plot <- plot + coord_cartesian(ylim = c(0, 800))
+  }
   
   # Remove legend for the first two plots
   if (group %in% c("CSPG", "WSPG", "FRB3")) {
@@ -340,34 +347,7 @@ biomass_observed_pasture <- biomass_observed_plot %>%
   summarize(biomass_pasture = round(mean(MeankgPerHa_plot), 2),
             uncertainty = round((sd(MeankgPerHa_plot)/mean(MeankgPerHa_plot)) * 100, 2))
 
-######### FUNCTION FOR HARMEL'S MODIFICATION STATISTICS ########################
-# Function for GOF stats with Modification 2
-compute_mod2_stats <- function(df) {
-  df <- df %>%
-    mutate(
-      # Assign a small default (e.g., 1) when uncertainty is NA or zero
-      # Happens when observed values are 0 with no variability (i.e., no uncertainty)
-      uncertainty = ifelse(is.na(uncertainty) | uncertainty <= 0, 1, uncertainty)
-    )
-  
-  prob <- pnorm(df$simulated, mean = df$observed, sd = df$uncertainty)
-  prob_adj <- ifelse(prob > 0.5, 1 - prob, prob)
-  CF <- 1 - 2 * prob_adj
-  eu2i <- CF * 0.5 * abs(df$observed - df$simulated)
-  
-  NSE_mod2 <- 1 - sum(eu2i^2) / sum((df$observed - mean(df$observed))^2)
-  d_mod2 <- 1 - sum(eu2i^2) / sum((abs(df$simulated - mean(df$observed)) + abs(df$observed - mean(df$observed)))^2)
-  RMSE_mod2 <- sqrt(mean(eu2i^2))
-  MAE_mod2 <- mean(abs(eu2i))
-  
-  data.frame(
-    NSE_mod2 = NSE_mod2,
-    d_mod2 = d_mod2,
-    RMSE_mod2 = RMSE_mod2,
-    MAE_mod2 = MAE_mod2
-  )
-}
-##### PASTURE LEVEL STATISTICS #################################################
+##### PREP for PASTURE LEVEL STATISTICS ########################################
 # Prepare the simulated data
 sim_data_clean <- biomass_simulated_Aug12 %>%
   rename(simulated = biomass_pasture) %>%
@@ -385,82 +365,57 @@ comparison_df <- merge(
   by = c("Date", "Y", "Treatment", "Pasture", "CPNM")
 )
 
+# Reordering columns for excel export
+excel_export <- comparison_df %>%
+  select(Y, Treatment, Pasture, CPNM, Sim.Type, 
+         observed, uncertainty, simulated) %>%
+  mutate(simulated = round(simulated, 2)) # round by 2 decimal points
 
-# Compute GOF metrics for each Sim.Type and CPNM
-mod2_summary <- comparison_df %>%
-  group_by(Sim.Type, CPNM) %>%
-  group_modify(~ compute_mod2_stats(.x)) %>%
-  ungroup()
+# Export for Harmel Excel workbook
+# write.csv(excel_export, "cageBiomass_comparisons_2014-2018.csv")
+  
 
-# Print results
-print(mod2_summary)
 
-####################### PASTURE STATS VISUALIZATION ############################
-#---- 1. Compute delta metrics from mod2_summary ----#
-delta_df <- mod2_summary %>%
-  pivot_wider(
-    names_from = Sim.Type,
-    values_from = c(NSE_mod2, d_mod2, RMSE_mod2, MAE_mod2),
-    names_sep = "."
-  ) %>%
-  mutate(
-    delta_NSE  = `NSE_mod2.Spatial Variability` - `NSE_mod2.No Variability`,
-    delta_d    = `d_mod2.Spatial Variability` - `d_mod2.No Variability`,
-    delta_RMSE = `RMSE_mod2.Spatial Variability` - `RMSE_mod2.No Variability`,
-    delta_MAE  = `MAE_mod2.Spatial Variability`  - `MAE_mod2.No Variability`
-  )
+##### SIMULATION COMPARISON STATS ##############################################
+library(lubridate)
 
-#---- 2. Generic plotting function ----#
-plot_delta <- function(df, delta_col, y_label) {
-  ggplot(df, aes(x = CPNM, y = .data[[delta_col]], 
-                 fill = .data[[delta_col]] > 0)) +
-    geom_bar(stat = "identity", width = 0.6) +
-    scale_fill_manual(values = c("TRUE" = "forestgreen", 
-                                 "FALSE" = "firebrick"), guide = FALSE) +
-    labs(y = y_label, x = "CPNM") +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
-    theme_minimal(base_size = 15) +
-    theme(text = element_text(family = "serif"))
+summarize_biomass_pasture <- function(data) {
+  data %>%
+    # Group data by treatment, ID, plant community (CPNM), and year
+    group_by(Treatment, ID, CPNM, Y) %>%
+    # Arrange data by date and calculate cumulative biomass for each observation
+    arrange(Date) %>%
+    mutate(cumulative_DDMkg_ha = cumsum(DDMkg_ha),
+           month_day = format(Date, "%m-%d")) %>%
+    ungroup() %>%
+    mutate(month = month(Date),
+           day = day(Date)) %>%
+    # Group by date, treatment, pasture, plant community, year, and month-day
+    group_by(Date, Treatment, Pasture, CPNM, Y, month_day, month, day) %>%
+    # Calculate the mean cumulative biomass for each pasture
+    summarize(mean_DDMkg_ha_pasture = mean(cumulative_DDMkg_ha, na.rm = TRUE)) %>%
+    ungroup()
 }
 
-#---- 3. Generate all delta plots ----#
-p1 <- plot_delta(delta_df, "delta_NSE",  "∆ NSE") + labs(x = NULL)
-p2 <- plot_delta(delta_df, "delta_d",    "∆ d") + labs(x = NULL)
-p3 <- plot_delta(delta_df, "delta_RMSE", "∆ RMSE")
-p4 <- plot_delta(delta_df, "delta_MAE",  "∆ MAE")
+# Summarize the biomass datasets
+# - Summarize cumulative biomass for each treatment and year
+biomass_summary_spatial_pasture <- summarize_biomass_pasture(biomass_spatial) %>% 
+  mutate(Sim.Type = "Spatial Variability")
+biomass_summary_no_var_pasture <- summarize_biomass_pasture(biomass_no_variability) %>% 
+  mutate(Sim.Type = "No Variability")
 
-#---- 4. Combine into grid ----#
-(p1 | p2) / (p3 | p4) + plot_layout(heights = c(1, 1.05))
+combined_summary_pasture <- bind_rows(biomass_summary_spatial_pasture, 
+                                      biomass_summary_no_var_pasture) %>%
+  filter(month >= 5 & month <= 10)
 
-# Save output
-# ggsave("delta_gof_metrics.png", width = 12, height = 8, dpi = 300)
+# Linear model comparing both scenarios
+mod_biomass <- lm(mean_DDMkg_ha_pasture ~ Sim.Type * CPNM + Y, 
+                  data = combined_summary_pasture)
 
-##### PLOT LEVEL STATISTICS ####################################################
-# # Prepare simulated data
-# sim_plot_clean <- biomass_spatial_Aug12_plot %>%
-#   rename(simulated = cumulative_DDMkg_ha) %>%
-#   mutate(Y = as.integer(Y)) %>%
-#   select(Date, Y, Treatment, Pasture, Plot, CPNM, simulated)
-# 
-# # Prepare observed data
-# obs_plot_clean <- biomass_observed_plot %>%
-#   rename(observed = MeankgPerHa_plot) %>%
-#   select(Date, Y, Treatment, Pasture, Plot, CPNM, observed, uncertainty) %>%
-#   mutate(Y = as.integer(Y))
-# 
-# # Join simulated and observed
-# comparison_plot_df <- merge(
-#   sim_plot_clean,
-#   obs_plot_clean,
-#   by = c("Date", "Y", "Treatment", "Pasture", "Plot", "CPNM")
-# )
-# 
-# # Compute stats by CPNM (only one Sim.Type at this scale)
-# mod2_plot_summary <- comparison_plot_df %>%
-#   group_by(CPNM) %>%
-#   group_modify(~ compute_mod2_stats(.x)) %>%
-#   ungroup() %>%
-#   mutate(Sim.Type = "Spatial Variability (Plot)")
-# 
-# # Output results
-# print(mod2_plot_summary)
+summary(mod_biomass)
+
+# Pair-wise contrasts
+emm_biomass <- emmeans(mod_biomass, ~ Sim.Type | CPNM)
+
+# Post-hoc analysis of pair-wise contrasts
+pairs(emm_biomass, adjust = "tukey", reverse = TRUE)

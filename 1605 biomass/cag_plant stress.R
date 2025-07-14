@@ -4,6 +4,7 @@ library(data.table)
 library(lubridate)
 library(patchwork)
 library(emmeans)
+library(ggsci)
 
 ####### PANEL A: Monthly Precipitation #######
 
@@ -124,31 +125,52 @@ summary(model_ws)
 summary(model_ts)
 
 # Get estimated marginal means from each model
-emm_ws <- emmeans(model_ws, ~ Sim.Type | CPNM) %>%
+emm_ws <- emmeans(model_ws, ~ Sim.Type | CPNM) 
+
+emm_ws_df <- emm_ws %>%
   as.data.frame() %>%
   mutate(StressType = "Water Stress")
 
-emm_ts <- emmeans(model_ts, ~ Sim.Type | CPNM) %>%
+# Post-hoc analysis of pair-wise contrasts
+pairs(emm_ws, adjust = "tukey", reverse = TRUE)
+
+emm_ts <- emmeans(model_ts, ~ Sim.Type | CPNM) 
+
+emm_ts_df <- emm_ts %>%
   as.data.frame() %>%
   mutate(StressType = "Temperature Stress")
 
+# Post-hoc analysis of pair-wise contrasts
+pairs(emm_ts, adjust = "tukey", reverse = TRUE)
+
 # Combine
-emm_combined <- bind_rows(emm_ws, emm_ts)
+emm_combined <- bind_rows(emm_ws_df, emm_ts_df) %>%
+  mutate(CPNM = recode(CPNM,
+                       "VUOC" = "CSAG",
+                       "FRB3" = "FORB")) %>%
+  mutate(CPNM = fct_relevel(CPNM, "CSPG", "WSPG", "FORB", "CSAG"))
 
 # Plot
 plot_stress <- ggplot(emm_combined, aes(x = CPNM, y = emmean, fill = Sim.Type)) +
   geom_bar(stat = "identity", position = position_dodge(0.7), width = 0.6) +
   geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE),
-                position = position_dodge(0.7), width = 0.2) +
+                position = position_dodge(0.7), width = 0.4) +
   facet_wrap(~ StressType) +
-  labs(y = "Modeled Mean Daily Stress (0 = max stress, 1 = no stress)",
+  labs(y = "Mean Daily Stress (0 = max stress, 1 = no stress)",
        x = "Plant Group", fill = "Simulation Type") +
   scale_fill_npg() +
   theme_minimal(base_size = 15) +
   theme(text = element_text(family = "serif"),
         axis.text.x = element_text(angle = 45, hjust = 1))
 
-
+## Overall means
+# mean_WS_cpnm <- combined_WS_CPNM %>%
+#   group_by(CPNM, Sim.Type) %>%
+#   summarize(ws_cpnm = round(mean(cpnm_stress_daily), 2))
+# 
+# mean_TS_cpnm <- combined_TS_CPNM %>%
+#   group_by(CPNM, Sim.Type) %>%
+#   summarize(ts_cpnm = round(mean(cpnm_stress_daily), 2))
 
 ####### Assemble Final 2x2 Layout #######
 
@@ -161,5 +183,5 @@ final_plot
 
 ####### Export Figure #######
 
-#ggsave("Figure_Climate_Stress.tiff", plot = final_plot,
-#       width = 16, height = 16, dpi = 300, compression = "lzw")
+ggsave("Figure_Climate_Stress.tiff", plot = final_plot,
+      width = 16, height = 16, dpi = 300, compression = "lzw")
