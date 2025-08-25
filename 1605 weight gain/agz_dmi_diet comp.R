@@ -3,6 +3,7 @@ library(data.table)
 library(tidyverse)
 library(patchwork)
 library(ggsci)  # For nejm color palette
+library(emmeans)
 
 # Define years of interest
 years <- 2014:2018
@@ -110,13 +111,12 @@ combined_plot
 mod_dietComp <- lm(MeanPercentage ~ Simulation * CPNM * Treatment + YR, combined_data)
 summary(mod_dietComp)
 
-mod_dietComp <- lm(MeanPercentage ~ Simulation * CPNM * Treatment + YR, combined_data)
-
 # Get estimated marginal means from each model
 emm_dietComp <- emmeans(mod_dietComp, ~ Simulation | CPNM * Treatment) 
 
 # Post-hoc analysis of pair-wise contrasts
 pairs(emm_dietComp, adjust = "tukey", reverse = TRUE)
 
+# Dry matter intake
 mod_dmi <- lm(trt_dmi ~ Source  * Treatment + as.factor(YR), dmi_combined)
 summary(mod_dmi)

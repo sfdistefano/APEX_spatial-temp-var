@@ -4,11 +4,14 @@ library(data.table)  # Fast data manipulation tools
 library(ggsci)       # Provides scientific journal color palettes for ggplot
 library(patchwork)
 library(emmeans)
+library(lme4)
+
+setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var")
 
 # Import pasture metadata
 # - Read in CSV files containing metadata for pastures, which include IDs and ecological site information
-PastureID_sa92 <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv")
-PastureID_sa20 <- read.csv("C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv")
+PastureID_sa92 <- read.csv("PastureID_ecosite_92subareas.csv")
+PastureID_sa20 <- read.csv("PastureID_ecosite_20subareas.csv")
 
 # Define a function for reading and preprocessing biomass simulation data
 # - This function reads biomass data from simulation output files
@@ -64,15 +67,15 @@ summarize_biomass <- function(data) {
 # - One dataset represents biomass with spatial variability
 # - The other represents biomass without spatial variability
 biomass_spatial <- read_preprocess_biomass(
-  file_path = "C:/Users/Sean.DiStefano/Downloads/APEX1605_NEW/APEX1605_CO_all92/CONUNN_TGM.cag",
+  file_path = "1605 biomass/APEX bm outputs/all92_cagebm_CONUNN_TGM.cag",
   biomass_col = 'AB_DDMkg/ha',
-  metadata_path = "C:/APEX data and scripts/Data/PastureID_ecosite_92subareas.csv"
+  metadata_path = "PastureID_ecosite_92subareas.csv"
 )
 
 biomass_no_variability <- read_preprocess_biomass(
-  file_path = "C:/Users/Sean.DiStefano/Downloads/APEX1605_NEW/APEX1605_CO_all20/CONUNN_TGM.cag",
+  file_path = "1605 biomass/APEX bm outputs/all20_cagebm_CONUNN_TGM.cag",
   biomass_col = 'AB_DDMkg/ha',
-  metadata_path = "C:/APEX data and scripts/Data/PastureID_ecosite_20subareas.csv"
+  metadata_path = "PastureID_ecosite_20subareas.csv"
 )
 
 # Summarize the biomass datasets
@@ -83,7 +86,7 @@ biomass_summary_no_var <- summarize_biomass(biomass_no_variability)
 # Importing and processing observational data
 # - Read observed data, select relevant columns, create new calculated columns
 # - Filter for years 2014 to 2018 and convert wide data to long format
-observed_data <- read.csv("C:/APEX data and scripts/Data/CPER Biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", 
+observed_data <- read.csv("1605 biomass/CARM_Biomass_Widecln_attr_2024-03-26.csv", 
                           header = TRUE) %>%
   # Select columns for analysis
   select(2:13, 17) %>%
@@ -260,8 +263,6 @@ combined_plot
 
 
 # Save the combined plot
-setwd("C:/Users/Sean.DiStefano/Documents/GitHub/APEX_spatial-temp-var/1605 biomass")
-
 # ggsave(filename = "combined_accBiomass_plots.png",
 #        plot = combined_plot,
 #        width = 20, height = 12)
@@ -345,7 +346,7 @@ biomass_observed_plot <- observed_data %>%
 biomass_observed_pasture <- biomass_observed_plot %>%
   group_by(Date, Treatment, Pasture, CPNM, Y) %>%
   summarize(biomass_pasture = round(mean(MeankgPerHa_plot), 2),
-            uncertainty = round((sd(MeankgPerHa_plot)/mean(MeankgPerHa_plot)) * 100, 2))
+            SD = round(sd(MeankgPerHa_plot), 2))
 
 ##### PREP for PASTURE LEVEL STATISTICS ########################################
 # Prepare the simulated data
@@ -356,7 +357,7 @@ sim_data_clean <- biomass_simulated_Aug12 %>%
 # Prepare the observed data
 obs_data_clean <- biomass_observed_pasture %>%
   rename(observed = biomass_pasture) %>%
-  select(Date, Y, Treatment, Pasture, CPNM, observed, uncertainty)
+  select(Date, Y, Treatment, Pasture, CPNM, observed, SD)
 
 # Join simulated and observed data on shared keys
 comparison_df <- merge(
@@ -368,7 +369,7 @@ comparison_df <- merge(
 # Reordering columns for excel export
 excel_export <- comparison_df %>%
   select(Y, Treatment, Pasture, CPNM, Sim.Type, 
-         observed, uncertainty, simulated) %>%
+         observed, SD, simulated) %>%
   mutate(simulated = round(simulated, 2)) # round by 2 decimal points
 
 # Export for Harmel Excel workbook
@@ -391,7 +392,7 @@ summarize_biomass_pasture <- function(data) {
     mutate(month = month(Date),
            day = day(Date)) %>%
     # Group by date, treatment, pasture, plant community, year, and month-day
-    group_by(Date, Treatment, Pasture, CPNM, Y, month_day, month, day) %>%
+    group_by(Date, Treatment, Pasture, Block, CPNM, Y, month_day, month, day) %>%
     # Calculate the mean cumulative biomass for each pasture
     summarize(mean_DDMkg_ha_pasture = mean(cumulative_DDMkg_ha, na.rm = TRUE)) %>%
     ungroup()
@@ -409,13 +410,102 @@ combined_summary_pasture <- bind_rows(biomass_summary_spatial_pasture,
   filter(month >= 5 & month <= 10)
 
 # Linear model comparing both scenarios
-mod_biomass <- lm(mean_DDMkg_ha_pasture ~ Sim.Type * CPNM + Y, 
-                  data = combined_summary_pasture)
-
-summary(mod_biomass)
+mod_biomass <- lmer(mean_DDMkg_ha_pasture ~ Sim.Type * CPNM + Y +
+                      (1|Block), 
+                    data = combined_summary_pasture)
 
 # Pair-wise contrasts
 emm_biomass <- emmeans(mod_biomass, ~ Sim.Type | CPNM)
 
 # Post-hoc analysis of pair-wise contrasts
 pairs(emm_biomass, adjust = "tukey", reverse = TRUE)
+
+##### ECOLOGICAL SITE ANALYSIS #################################################
+summarize_biomass_plot <- function(data) {
+  data %>%
+    # Group data by treatment, ID, plant community (CPNM), and year
+    group_by(Treatment, ID, CPNM, Y) %>%
+    # Arrange data by date and calculate cumulative biomass for each observation
+    arrange(Date) %>%
+    mutate(cumulative_DDMkg_ha = cumsum(DDMkg_ha),
+           month_day = format(Date, "%m-%d")) %>%
+    ungroup()
+}
+
+biomass_summary_spatial_plot <- summarize_biomass_plot(biomass_spatial)
+
+
+model_biomass_ecosite <- lmer(cumulative_DDMkg_ha ~ Ecosite * CPNM + Y + # fixed effects
+                             (1 | Block), # random effect
+                           biomass_summary_spatial_plot)
+
+summary(model_biomass_ecosite)
+
+emm_ecosite <- emmeans(model_biomass_ecosite, ~ Ecosite | CPNM)
+pairs(emm_ecosite, adjust = "Tukey")
+
+emm_ecosite <- as.data.frame(emm_ecosite)
+
+ggplot(emm_ecosite, aes(x = Ecosite, y = emmean, color = Ecosite)) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  facet_wrap(~ CPNM, scales = "free_y") +
+  labs(y = "Estimated Biomass (kg/ha)",
+       x = "Ecological Site") +
+  theme_minimal() +
+  scale_color_npg() +
+  theme(text = element_text(family = "serif", size = 15)) +
+  guides(color = "none")
+
+##### SOIL TYPE ANALYSIS #######################################################
+PastureID_sa92_soilComp <- read.csv("PastureID_ecosite_92subareas.csv")
+
+# Prepare and plot
+p1 <- PastureID_sa92_soilComp %>%
+  count(Ecosite, apex_soilComp) %>%
+  ggplot(aes(x = Ecosite, y = n, fill = apex_soilComp)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Ecological Site", y = "Frequency", fill = "Soil Type") +
+  theme_minimal() +
+  theme(text = element_text(family = "serif", size = 15)) +
+  scale_fill_npg()
+
+
+biomass_spatial_plot_soilComp <- biomass_summary_spatial_plot %>%
+  left_join(PastureID_sa92_soilComp)
+
+model_biomass_soil <- lmer(cumulative_DDMkg_ha ~ apex_soilComp * CPNM + Y + # fixed effects
+                             (1 | Block), # random effect
+                           biomass_spatial_plot_soilComp)
+
+summary(model_biomass_soil)
+
+emm_soil <- emmeans(model_biomass_soil, ~ apex_soilComp | CPNM)
+pairs(emm_soil, adjust = "Tukey")
+
+emm_soil <- as.data.frame(emm_soil)
+
+p2 <- ggplot(emm_soil, aes(x = apex_soilComp, y = emmean, color = apex_soilComp)) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  facet_wrap(~ CPNM, scales = "free_y") +
+  labs(y = "Mean Estimated Biomass (kg/ha)",
+       x = "Soil Type") +
+  theme_minimal() +
+  scale_color_npg() +
+  theme(text = element_text(family = "serif", size = 15),
+        axis.text.x = element_blank()) +
+  guides(color = "none")  
+
+combined_plot <- p1 / p2 + 
+  plot_annotation(tag_levels = 'a')
+
+combined_plot
+
+# Save combined plot as high-resolution PNG
+# ggsave("soil_type_panels.png",
+#        plot = combined_plot,
+#        width = 8, height = 10, units = "in",
+#        dpi = 300)

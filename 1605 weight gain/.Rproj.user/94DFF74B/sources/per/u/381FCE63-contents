@@ -1,0 +1,32 @@
+# Daily Weight Gain - CARM (no legend)
+p1 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'CARM', ], 
+             aes(x = Date, y = DWG, color = Simulation)) +
+  geom_smooth(method = "gam", se = FALSE, 
+              show.legend = FALSE) +
+  scale_color_npg() +
+  theme_minimal() +
+  ylab("Daily Weight Gain (kg/hd/day)") +
+  xlab("") +
+  facet_wrap(~ year(Date), scales = "free_x") +
+  theme(
+    text = element_text(size = 15, family = 'serif'),
+    plot.title = element_blank()
+  )
+
+# Daily Weight Gain - TRM (no legend)
+p2 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'TRM', ], 
+             aes(x = Date, y = DWG, color = Simulation)) +
+  geom_smooth(method = "gam", se = FALSE) +
+  scale_color_npg() +
+  theme_minimal() +
+  ylab("") +
+  xlab("") +
+  facet_wrap(~ year(Date), scales = "free_x") +
+  theme(
+    text = element_text(size = 15, family = 'serif'),
+    plot.title = element_blank()
+  )
+
+combined_plot <- (p1 + p2)
+
+combined_plot

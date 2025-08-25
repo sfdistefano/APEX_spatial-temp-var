@@ -1,0 +1,27 @@
+{
+    "id": "11F6F581",
+    "path": "~/GitHub/APEX_spatial-temp-var/1605 biomass/cag_biomass_accumulated_scratchpad.R",
+    "project_path": "cag_biomass_accumulated_scratchpad.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1755790577901.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "7,23",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1753301925,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1753301925,
+    "read_only": false,
+    "read_only_alternatives": []
+}

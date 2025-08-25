@@ -113,16 +113,9 @@ noVar_WS_CPNM <- summarize_stress_cpnm(no_variability, "WS") %>% mutate(Sim.Type
 combined_WS_CPNM <- bind_rows(spatial_WS_CPNM, noVar_WS_CPNM) %>%
   filter(month_day >= as.Date("2000-05-01") & month_day <= as.Date("2000-10-31"))
 
-spatial_TS_CPNM <- summarize_stress_cpnm(spatial, "TS") %>% mutate(Sim.Type = "Spatial Variability")
-noVar_TS_CPNM <- summarize_stress_cpnm(no_variability, "TS") %>% mutate(Sim.Type = "No Variability")
-combined_TS_CPNM <- bind_rows(spatial_TS_CPNM, noVar_TS_CPNM) %>%
-  filter(month_day >= as.Date("2000-05-01") & month_day <= as.Date("2000-10-31"))
-
 model_ws <- lm(cpnm_stress_daily ~ Sim.Type * CPNM + Y, data = combined_WS_CPNM)
-model_ts <- lm(cpnm_stress_daily ~ Sim.Type * CPNM + Y, data = combined_TS_CPNM)
 
 summary(model_ws)
-summary(model_ts)
 
 # Get estimated marginal means from each model
 emm_ws <- emmeans(model_ws, ~ Sim.Type | CPNM) 
@@ -134,43 +127,27 @@ emm_ws_df <- emm_ws %>%
 # Post-hoc analysis of pair-wise contrasts
 pairs(emm_ws, adjust = "tukey", reverse = TRUE)
 
-emm_ts <- emmeans(model_ts, ~ Sim.Type | CPNM) 
-
-emm_ts_df <- emm_ts %>%
-  as.data.frame() %>%
-  mutate(StressType = "Temperature Stress")
-
-# Post-hoc analysis of pair-wise contrasts
-pairs(emm_ts, adjust = "tukey", reverse = TRUE)
-
-# Combine
-emm_combined <- bind_rows(emm_ws_df, emm_ts_df) %>%
-  mutate(CPNM = recode(CPNM,
-                       "VUOC" = "CSAG",
-                       "FRB3" = "FORB")) %>%
-  mutate(CPNM = fct_relevel(CPNM, "CSPG", "WSPG", "FORB", "CSAG"))
 
 # Plot
-plot_stress <- ggplot(emm_combined, aes(x = CPNM, y = emmean, fill = Sim.Type)) +
-  geom_bar(stat = "identity", position = position_dodge(0.7), width = 0.6) +
-  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE),
-                position = position_dodge(0.7), width = 0.4) +
-  facet_wrap(~ StressType) +
-  labs(y = "Mean Daily Stress (0 = max stress, 1 = no stress)",
-       x = "Plant Group", fill = "Simulation Type") +
-  scale_fill_npg() +
+plot_stress <- ggplot(emm_ws_df, aes(x = Sim.Type, y = emmean, group = CPNM, color = CPNM)) +
+  geom_line(aes(linetype = CPNM), size = 1.2) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(
+    y = "Mean Daily Water Stress\n(0 = max stress, 1 = no stress)",
+    x = "Simulation Type",
+    color = "Plant Group",
+    linetype = "Plant Group"
+  ) +
   theme_minimal(base_size = 15) +
-  theme(text = element_text(family = "serif"),
-        axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(text = element_text(family = "serif")) +
+  scale_color_npg()
 
 ## Overall means
 # mean_WS_cpnm <- combined_WS_CPNM %>%
 #   group_by(CPNM, Sim.Type) %>%
 #   summarize(ws_cpnm = round(mean(cpnm_stress_daily), 2))
 # 
-# mean_TS_cpnm <- combined_TS_CPNM %>%
-#   group_by(CPNM, Sim.Type) %>%
-#   summarize(ts_cpnm = round(mean(cpnm_stress_daily), 2))
 
 ####### Assemble Final 2x2 Layout #######
 

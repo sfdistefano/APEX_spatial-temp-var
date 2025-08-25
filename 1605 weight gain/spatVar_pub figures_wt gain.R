@@ -97,20 +97,52 @@ ggsave(
   bg = "white"     # ensure transparent background is not used
 )
 
-### comparison dataframe
-comparison_df_yearly <- grazing_weight_data_yearly %>%
-  pivot_wider(id_cols = c(Year:Treatment),
-              values_from = c(MeanWT:SD),
-              names_from = "Type") %>%
-  select(-"SD_Simulated: no variability", -"SD_Simulated: spatial variability") %>%
-  rename(uncertainty = SD_Measured,
-         observed = MeanWT_Measured) %>%
-  pivot_longer(cols = c("MeanWT_Simulated: no variability":"MeanWT_Simulated: spatial variability"),
-               names_to = "Sim.Type",
-               values_to = "simulated") %>%
-  mutate(Sim.Type = recode(Sim.Type,
-                           "MeanWT_Simulated: no variability"="No Variability",
-                           "MeanWT_Simulated: spatial variability"="Spatial Variability"))
+##### GOODNESS-OF-FIT METRICS ##################################################
+# Function to compute metrics for each treatment using hydroGOF
+calc_metrics_by_treatment <- function(observed_df, simulated_df, sim_label) {
+  merged_df <- inner_join(observed_df, simulated_df, by = c("Year", "Treatment"),
+                          suffix = c("_obs", "_sim")) %>%
+    filter(!is.na(MeanWT_obs) & !is.na(MeanWT_sim))
+  
+  results <- merged_df %>%
+    group_by(Treatment) %>%
+    summarise(
+      RMSD = rmse(MeanWT_sim, MeanWT_obs),
+      Willmott_d = d(MeanWT_sim, MeanWT_obs),
+      PBIAS = pbias(MeanWT_sim, MeanWT_obs),
+      .groups = "drop"
+    ) %>%
+    mutate(Simulation = sim_label)
+  
+  return(results)
+}
+
+# Prepare observed data
+observed_data <- grazing_weight_data_yearly %>%
+  filter(Type == "Measured") %>%
+  select(Year, Treatment, MeanWT) %>%
+  rename(MeanWT_obs = MeanWT)
+
+# Prepare simulated data
+sim_noVar <- grazing_weight_data_yearly %>%
+  filter(Type == "Simulated: no variability") %>%
+  select(Year, Treatment, MeanWT) %>%
+  rename(MeanWT_sim = MeanWT)
+
+sim_spatVar <- grazing_weight_data_yearly %>%
+  filter(Type == "Simulated: spatial variability") %>%
+  select(Year, Treatment, MeanWT) %>%
+  rename(MeanWT_sim = MeanWT)
+
+# Compute metrics
+perf_by_treat_noVar <- calc_metrics_by_treatment(observed_data, sim_noVar, "No Variability")
+perf_by_treat_spatVar <- calc_metrics_by_treatment(observed_data, sim_spatVar, "Spatial Variability")
+
+# Combine results
+treatment_accuracy_summary <- bind_rows(perf_by_treat_noVar, perf_by_treat_spatVar)
+
+# Print summary
+print(treatment_accuracy_summary)
 
 ###### DAILY GRAZING FILE (.DGZ) ###############################################
 
@@ -125,8 +157,11 @@ grazing_weight_data_daily$Simulation <- factor(grazing_weight_data_daily$Simulat
 # --- Build the 4 panels ---
 
 # Daily Weight Gain - CARM (no legend)
-p1 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'CARM', ], aes(x = Date)) +
-  geom_line(aes(y = DWG, color = Simulation), show.legend = FALSE) +
+# Daily Weight Gain - CARM (no legend)
+p1 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'CARM', ], 
+             aes(x = Date, y = DWG, color = Simulation)) +
+  geom_smooth(method = "gam", se = FALSE, 
+              show.legend = FALSE) +
   scale_color_npg() +
   theme_minimal() +
   ylab("Daily Weight Gain (kg/hd/day)") +
@@ -138,8 +173,9 @@ p1 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'C
   )
 
 # Daily Weight Gain - TRM (no legend)
-p2 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'TRM', ], aes(x = Date)) +
-  geom_line(aes(y = DWG, color = Simulation)) +
+p2 <- ggplot(grazing_weight_data_daily[grazing_weight_data_daily$Treatment == 'TRM', ], 
+             aes(x = Date, y = DWG, color = Simulation)) +
+  geom_smooth(method = "gam", se = FALSE) +
   scale_color_npg() +
   theme_minimal() +
   ylab("") +
